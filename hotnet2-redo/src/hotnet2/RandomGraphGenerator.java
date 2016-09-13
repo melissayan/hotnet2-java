@@ -1178,11 +1178,7 @@ public class RandomGraphGenerator{
 		neighbors.addAll(graph.getNeighbors(geneU));
 		neighbors.addAll(graph.getNeighbors(geneX));
 		Set<String> checked = new HashSet<String>();
-		Set<String> result = isConnected(geneU, geneX, geneV, geneY, graph, neighbors, checked); 
-		
-		if (result.contains("true"))
-			return true;
-		return false; 
+		return isConnected(geneU, geneX, geneV, geneY, graph, neighbors, checked); 
 	}
 
 	/**
@@ -1198,11 +1194,7 @@ public class RandomGraphGenerator{
 		Set<String> neighbors = new HashSet<String>();
 		neighbors.addAll(graph.getNeighbors(geneU));
 		Set<String> checked = new HashSet<String>();
-		Set<String> result = isConnected(geneU, geneX, geneV, geneY, graph, neighbors, checked); 
-		
-		if (result.contains("true"))
-			return true;
-		return false; 
+		return isConnected(geneU, geneX, geneV, geneY, graph, neighbors, checked); 
 	}
 
 	/**
@@ -1222,18 +1214,20 @@ public class RandomGraphGenerator{
 	 * @param checked - Set of genes checked for connection to edge2.
 	 * @return true if the graph is connected and false if the graph is not connected.
 	 */
-	private Set<String> isConnected(String geneU, String geneX, String geneV, String geneY, Graph<String, String> graph, Set<String> neighbors, Set<String> checked){
+	private boolean isConnected(String geneU, 
+	                            String geneX, 
+	                            String geneV, 
+	                            String geneY, 
+	                            Graph<String, String> graph, 
+	                            Set<String> neighbors, 
+	                            Set<String> checked) {
 		if (checked.contains(geneV) || checked.contains(geneY)){
 //			System.out.println("-- connected --");
-			Set<String> returnSet = new HashSet<String>();
-			returnSet.add("true");
-			return returnSet;
+			return true;
 		}
 		if (checked.containsAll(neighbors)){
 //			System.out.println("-- unconnected - checked has all neighbors --");
-			Set<String> returnSet = new HashSet<String>();
-			returnSet.add("false");
-			return returnSet;
+			return false;
 		} 
 		else {
 			HashSet<String> tempNeighbors = new HashSet<String>();
