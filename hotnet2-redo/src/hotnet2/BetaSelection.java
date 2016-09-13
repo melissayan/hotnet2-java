@@ -43,8 +43,8 @@ public class BetaSelection{
 
 	/**
 	 * Select the beta parameter to assign an amount of heat retained by each gene for creating the diffusion matrix
-	 * @param directory				directory of file
-	 * @param fiFile
+	 * @param directory - Directory of file.
+	 * @param fiFile - Reactome FI network file.
 	 * @param betweennessScoreFile
 	 * @param influenceFile
 	 * @throws IOException
