@@ -42,11 +42,11 @@ public class BetaSelection{
 	}
 
 	/**
-	 * Select the beta parameter to assign an amount of heat retained by each gene for creating the diffusion matrix
-	 * @param directory - Directory of file.
+	 * Selects the beta parameter to assign an amount of heat retained by each gene for creating the diffusion matrix.
+	 * @param directory - Directory of Reactome FI network file and place to save files.
 	 * @param fiFile - Reactome FI network file.
-	 * @param betweennessScoreFile
-	 * @param influenceFile
+	 * @param betweennessScoreFile - File name for gene betweenness centrality scores. 
+	 * @param influenceFile - File name for saving influence gene counts.
 	 * @throws IOException
 	 */
 	private void selectBeta(String directory, String fiFile, String betweennessScoreFile, String influenceFile) throws IOException{
@@ -90,11 +90,12 @@ public class BetaSelection{
 	}
 
 	/**
-	 * Select the beta parameter for the iRefIndex network
-	 * 		*note: to compare implementation matches HotNet2 Supplementary Figure 24 for iRefIndex network with beta=0.45 
-	 * @param directory
-	 * @param fiFile
-	 * @param betweennessScoreFile
+	 * Selectd the beta parameter for the iRefIndex network.
+	 * <p>
+	 * <b>Note:</b> to compare implementation matches HotNet2 Supplementary Figure 24 for iRefIndex network with beta=0.45 
+	 * @param directory Directory of Reactome FI network file and place to save files. 
+	 * @param fiFile - Reactome FI network file.
+	 * @param betweennessScoreFile - File name for gene betweenness centrality scores. 
 	 * @param influenceFile
 	 * @throws IOException
 	 */
@@ -110,7 +111,7 @@ public class BetaSelection{
 		List<String> sourceProteins =  new ArrayList<String>();
 		sourceProteins.add("10922");
 //		sourceProteins.add("6911"); //source protein for iref_edge_list_temp
-		
+
 		//Generate diffusion matrix with beta: 0.45
 		Set<String> geneSet = gu.getGeneGraphSetWrapper(largestComponent);
 		for(int i=1; i<2; i++){
@@ -129,10 +130,10 @@ public class BetaSelection{
 	}
 
 	/**
-	 * Save the results from calculating the betweenness centrality for all nodes in a graph
-	 * @param directory		directory to save the file in
-	 * @param fileName		name of file to save the betweenness centrality results in
-	 * @param graph			graph used for calculating betweenness centrality 
+	 * Saves the results from calculating the betweenness centrality for all nodes in a graph.
+	 * @param directory - Directory to save the file in.
+	 * @param fileName - File name to save the betweenness centrality results in.
+	 * @param graph - Graph used for calculating betweenness centrality.
 	 * @throws IOException 
 	 */
 	private void saveBetweennessCentrality(String directory, String fileName, Graph<String, String> graph) throws IOException{
@@ -151,10 +152,10 @@ public class BetaSelection{
 	}
 	
 	/**
-	 * Get 5 quartile source proteins based results in the betweenness centrality file  
-	 * @param directory		directory where the betweenness centrality score file is located
-	 * @param fileName		name of the betweenness centrality score file
-	 * @return				a set containing the genes from the minimum, 25% quartile, median, 75% quartile, and maximum betweenness centrality 
+	 * Gets 5 quartile source proteins based results in the betweenness centrality file.  
+	 * @param directory - Directory where the betweenness centrality score file is located.
+	 * @param fileName - Name of the betweenness centrality score file.
+	 * @return a set containing the genes from the minimum, 25% quartile, median, 75% quartile, and maximum betweenness centrality. 
 	 * @throws IOException
 	 */
 	private List<String> getSourceProteins(String directory, String fileName) throws IOException{
@@ -215,17 +216,21 @@ public class BetaSelection{
 
 	
 	/**
-	 * Save the number of proteins with at least a diffusion value of theta influence for the 3 categories below related to the source proteins:
-	 * 		- direct neighbors (source protein's direct neighbor)
-	 * 		- secondary neighbors (source protein's secondary neighbor.  nodes distance 2 away from source protein)
-	 * 		- all genes (all genes in network)
-	 * @param directory			directory containing file
-	 * @param fileName			name of file to save number of genes with at least theta influence for the 3 categories in
-	 * @param graph				a graph used to find neighbors 
-	 * @param sourceProteins	a list of 5 source proteins obtained from getSourceProteins()
-	 * @param diffusionMatrix	a diffusion matrix who's contents are compared with the theta influence value
-	 * @param geneSet			a set of genes that determines matrix ordering 
-	 * @param beta				a parameter that determines the fraction of own heat each gene retains
+	 * Saves influence gene count.
+	 * <p>
+	 * Saves the number of proteins with at least a diffusion value of theta influence for the 3 categories below related to the source proteins:
+	 * <ul>
+	 * <li>direct neighbors (source protein's direct neighbor)
+	 * <li>secondary neighbors (source protein's secondary neighbor.  nodes distance 2 away from source protein)
+	 * <li>all genes (all genes in network)
+	 * </ul>
+	 * @param directory - Directory to save files.
+	 * @param fileName - File name to save number of genes with at least theta influence for the 3 categories in.
+	 * @param graph - Graph used to find neighbors.
+	 * @param sourceProteins - List of 5 source proteins obtained from getSourceProteins().
+	 * @param diffusionMatrix - Diffusion matrix who's contents are compared with the theta influence value.
+	 * @param geneSet- Set of genes that determines matrix ordering.
+	 * @param beta - parameter that determines the fraction of own heat each gene retains.
 	 * @throws IOException 
 	 */
 	private void saveInfluenceGeneCountRange(String directory, String fileName, Graph<String,String> graph, List<String> sourceProteins, RealMatrix diffusionMatrix, Set<String> geneSet, BigDecimal tempBeta) throws IOException{
@@ -267,13 +272,13 @@ public class BetaSelection{
 	}
 	
 	/**
-	 * Calculate the number of proteins greater than or equal to the theta influence point
-	 * @param diffusionMatrix		diffusion matrix obtained from createDiffusionMatrix() 
-	 * @param geneSet				a set of genes that determines matrix ordering
-	 * @param specificGeneSet		a set of genes who must be found in a matrix
-	 * @param sourceProtein			the source protein used to find matrix value for comparison against the theta influence
-	 * @param thetaInfluence		used to determine number of genes with at least this value
-	 * @return						the number of genes greater than or equal to the theta influence
+	 * Calculates the number of proteins greater than or equal to the theta influence point.
+	 * @param diffusionMatrix - Diffusion matrix obtained from createDiffusionMatrix(). 
+	 * @param geneSet - Set of genes that determines matrix ordering.
+	 * @param specificGeneSet - Set of genes who must be found in a matrix.
+	 * @param sourceProtein- Source protein used to find matrix value for comparison against the theta influence.
+	 * @param thetaInfluence - Parameter used to determine number of genes with at least this value.
+	 * @return the number of genes greater than or equal to the theta influence.
 	 */
 	private int calculateInfluenceQuantity(RealMatrix diffusionMatrix, Set<String> geneSet, Set<String> specificGeneSet, String sourceProtein, double thetaInfluence){
 		int quantity = 0; 
@@ -288,12 +293,13 @@ public class BetaSelection{
 	}
 
 	/**
-	 * Get the indices of specific genes within a matrix
-	 * 		*note: only used in selectBeta() and matrix is ordered by geneSet
-	 * @param geneSet			a set of genes that determines matrix ordering 
-	 * @param specificGeneSet	a set of genes whose indices must be found in a matrix 
-	 * @param sourceProtein		the source protein used to find matrix value for comparison against the theta influence
-	 * @return					a list of matrix indicies needed for calculateInfleuenceQuantity()
+	 * Gets the indices of specific genes within a matrix.
+	 * <p>
+	 * <b>Note:</b> only used in selectBeta() and matrix is ordered by geneSet.
+	 * @param geneSet - Set of genes that determines matrix ordering.
+	 * @param specificGeneSet - Set of genes whose indices must be found in a matrix. 
+	 * @param sourceProtein - Source protein used to find matrix value for comparison against the theta influence.
+	 * @return list of matrix indicies needed for calculateInfleuenceQuantity().
 	 */
 	private List<Integer> getSpecificGeneIndexInSet(Set<String> geneSet, Set<String> specificGeneSet, String sourceProtein) {
 		List<String> geneList = new ArrayList<String>(geneSet);

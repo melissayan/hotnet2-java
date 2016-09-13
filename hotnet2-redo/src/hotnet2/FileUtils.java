@@ -20,50 +20,8 @@ import org.junit.Test;
 import edu.uci.ics.jung.graph.Graph;
 
 public class FileUtils{
-/*	private Path currentPath; 
-	private String directory; 
-	private String fileName;
-	private Set<String> setStringSave;
-	private String file1;
-	private String file2; 
-	
-	public FileUtils (){
-		this.currentPath = Paths.get("");
-		this.directory = currentPath.toAbsolutePath().toString();
-	}
-	
-	public String getDirectory(){
-		return this.directory;
-	}
-	public void setDirectory(String dir){
-		this.directory = dir; 
-	}
-	public String getFileName(){
-		return this.fileName;
-	}
-	public void setFileName(String file){
-		this.fileName = file; 
-	}
-	public Set<String> getSetStringSave(){
-		return this.setStringSave;
-	}
-	public void setSetStringSave(Set<String> setSave){
-		this.setStringSave = setSave;
-	}
-	public String getFile1(){
-		return this.file1;
-	}
-	public void setFile1(String file){
-		this.file1 = file; 
-	}
-	public String getFile2(){
-		return this.file2;
-	}
-	public void setFile2(String file){
-		this.file2 = file; 
-	}
-*/
-	public FileUtils (){
+
+	public FileUtils(){
 		
 	}
 	

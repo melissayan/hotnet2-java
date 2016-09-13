@@ -35,7 +35,7 @@ public class GraphUtils{
 	private String geneIndexFile;
 	private String edgeListFile;
 	
-	public GraphUtils (){
+	public GraphUtils(){
 		this.currentPath = Paths.get("");
 		this.directory = currentPath.toAbsolutePath().toString();
 		this.allGenesFile = "allGenes.txt";
@@ -52,10 +52,6 @@ public class GraphUtils{
 	public void setFifile(String reactomeFileName){
 		this.fiFile = reactomeFileName;
 	}
-/*	public void setfiFilePath(String directory, String fiFile){
-		this.fiFilePath = Paths.get(directory, fiFile);
-	}
-*/	
 	
 	/**
 	 * Saves 3 files related to the Reactome FI network graph.
@@ -68,7 +64,7 @@ public class GraphUtils{
 	 * </ul>
 	 * <b>Note:</b> this can also check that the largest component found matches the largest component in a reference file.
 	 * <p>
-	 * @param directory	- Directory of Reactome FI network file and place to save files. 	
+	 * @param directory	- Directory of Reactome FI network file and place to save files.
 	 * @param fiFile - Reactome FI network file name.
 	 * @param allGenesFile - File name for genes in the Reactome FI network. 
 	 * @param allPairsFile - File name for all interaction pairs in the Reactome FI network.
