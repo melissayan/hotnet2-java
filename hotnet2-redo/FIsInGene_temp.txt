@@ -1,0 +1,15 @@
+Gene1	Gene2	Annotation	Direction	Score
+16-5-5	CDC42	predicted	-	0.82
+16-5-5	RHOJ	predicted	-	0.82
+<DELTA>FAS/APO-1/CD95	BID	activate	->	1.00
+<DELTA>FAS/APO-1/CD95	PTPN11	inhibited by	|-	1.00
+A1CF	APOBEC1	catalyzed by; complex; input	<-	1.00
+A2M	BMP1	inhibit	-|	1.00
+ABI1	RAC1	activate; activated by; complex; input	<->	1.00
+AKT1	PPP2CA	PPrel: inhibited by, dephosphorylation; inhibit	|-|	1.00
+CDC42	16-5-5	predicted	-	0.82
+AKT1	PPP2CA	PPrel: inhibited by, dephosphorylation; inhibit	|-|	1.00
+AKT1	AKT1	PPrel: inhibited by, dephosphorylation; inhibit	|-|	1.00
+RHOQ	RHOJ	predicted	-	0.82
+RHOQ	CDC42	predicted	-	0.82
+16-5-5	A	predicted	-	0.82
