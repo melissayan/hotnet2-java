@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.commons.math3.linear.RealMatrix;
+import org.junit.Test;
 
 import edu.uci.ics.jung.algorithms.importance.BetweennessCentrality;
 import edu.uci.ics.jung.graph.Graph;
@@ -36,6 +37,12 @@ public class BetaSelection{
 		this.influenceFile = "influence.txt";
 	}
 	
+	@Test
+	public void testBetaSelection() throws IOException{
+		String fiFile = "FIsInGene_031516_with_annotations.txt";
+		Path fiFilePath = Paths.get(directory, fiFile);
+		selectBeta(directory, fiFile, betweennessScoreFile, influenceFile);
+	}
 	
 	public void selectBetaWrapper(String directory, String fiFile, String betweennessScoreFile, String influenceFile) throws IOException{
 		selectBeta(directory, fiFile, betweennessScoreFile, influenceFile);
@@ -43,6 +50,8 @@ public class BetaSelection{
 
 	/**
 	 * Selects the beta parameter to assign an amount of heat retained by each gene for creating the diffusion matrix.
+	 * <p>
+	 * <b>Note:</b> results are saved in a textfile for processing in excel.
 	 * @param directory - Directory of Reactome FI network file and place to save files.
 	 * @param fiFile - Reactome FI network file.
 	 * @param betweennessScoreFile - File name for gene betweenness centrality scores. 
@@ -90,21 +99,21 @@ public class BetaSelection{
 	}
 
 	/**
-	 * Selectd the beta parameter for the iRefIndex network.
+	 * Selects the beta parameter for the iRefIndex network.
 	 * <p>
-	 * <b>Note:</b> to compare implementation matches HotNet2 Supplementary Figure 24 for iRefIndex network with beta=0.45 
-	 * @param directory Directory of Reactome FI network file and place to save files. 
-	 * @param fiFile - Reactome FI network file.
+	 * <b>Note:</b> to compare implementation matches HotNet2 Supplementary Figure 24 for iRefIndex network with beta=0.45. 
+	 * @param directory - Directory of iRefIndex network file and place to save files. 
+	 * @param file - iRefIndex network file.
 	 * @param betweennessScoreFile - File name for gene betweenness centrality scores. 
-	 * @param influenceFile
+	 * @param influenceFile - File name for saving influence gene counts.
 	 * @throws IOException
 	 */
-	private void selectBetaForIrefindex(String directory, String fiFile, String betweennessScoreFile, String influenceFile) throws IOException{
+	private void selectBetaForIrefindex(String directory, String file, String betweennessScoreFile, String influenceFile) throws IOException{
 		GraphUtils gu = new GraphUtils();
 		HotNet2Matrices hn2m = new HotNet2Matrices(); 
 		
-		//Create the largest component using the whole ReactomeFI network graph
-		Graph<String, String> allGenesGraph = gu.createReactomeFIGraphWrapper(directory, fiFile);
+		//Create the largest component using the iRefIndex network graph
+		Graph<String, String> allGenesGraph = gu.createReactomeFIGraphWrapper(directory, file);
 		Graph<String, String> largestComponent = gu.createLargestComponentGraphWrapper(allGenesGraph);
 		
 		//Get TP53 source protein from iref_edge_list
