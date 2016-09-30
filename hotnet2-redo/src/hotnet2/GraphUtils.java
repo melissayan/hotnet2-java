@@ -19,6 +19,7 @@ import org.apache.commons.math3.linear.RealMatrix;
 
 import edu.uci.ics.jung.algorithms.cluster.WeakComponentClusterer;
 import edu.uci.ics.jung.algorithms.filters.FilterUtils;
+import edu.uci.ics.jung.graph.DirectedSparseGraph;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.UndirectedSparseGraph;
 
@@ -171,6 +172,27 @@ public class GraphUtils{
 		}
 		return graph;
 	}
+
+	/**
+	 * Creates a directed graph.
+	 * @param genes - Set of genes in the graph.
+	 * @param pairs - Set of interaction pairs in the graph.
+	 * @return a directed graph. 
+	 */
+	private Graph<String,String> createGraphDirected (Set<String> genes, Set<String> pairs){
+		Graph<String, String> graph = new DirectedSparseGraph<String, String>();	
+		for (String g: genes)
+			graph.addVertex(g);
+		if(!pairs.isEmpty()){
+			for (String p: pairs){ 
+				String[] row = p.split("\t");
+				String gene1 = row[0];
+				String gene2 = row[1];
+				graph.addEdge(p ,gene1, gene2); 
+			}			
+		}
+		return graph;
+	}
 	
 	/**
 	 * Gets the largest component in a graph.
@@ -182,9 +204,8 @@ public class GraphUtils{
 		Set<Set<String>> components = wcc.transform(graph);
 		Set<String> largestComponent = new HashSet<String>();
 		for (Set<String> c: components){	
-			if(c.size() > largestComponent.size()){
+			if(c.size() > largestComponent.size())
 				largestComponent = c; 
-			}
 		}
 		return largestComponent; 
 	}
@@ -277,7 +298,7 @@ public class GraphUtils{
 		List<Integer> degreeList = new ArrayList<Integer>();
 		List<String> geneList = new ArrayList<String>(geneSet);
 		for (String g: geneList){
-			graph.getOutEdges(g);
+//			graph.getOutEdges(g);
 			degreeList.add(graph.getOutEdges(g).size());
 		}
 		return degreeList;
@@ -289,17 +310,17 @@ public class GraphUtils{
 	 * @param geneSet - Set of genes used to determine matrix order.
 	 * @return a graph generated from the matrix
 	 */
-	public Graph<String, String> covertMatrixToGraphWrapper (RealMatrix matrix, Set<String> geneSet){
-		return covertMatrixToGraph(matrix, geneSet);
+	public Graph<String, String> covertMatrixToDirectedGraphWrapper (RealMatrix matrix, Set<String> geneSet){
+		return covertMatrixToDirectedGraph(matrix, geneSet);
 	}
 	
 	/**
-	 * Converts the provided RealMatrix into a graph. 
+	 * Converts the provided RealMatrix into a directed graph. 
 	 * @param matrix - Matrix to convert into graph.
 	 * @param geneSet - Set of genes used to determine matrix order.
-	 * @return a graph generated from the matrix
+	 * @return a directed graph generated from the matrix
 	 */
-	private Graph<String, String> covertMatrixToGraph (RealMatrix matrix, Set<String> geneSet){
+	private Graph<String, String> covertMatrixToDirectedGraph (RealMatrix matrix, Set<String> geneSet){
 		List<String> geneList = new ArrayList<String>(geneSet);
 		Set<String> genes = new TreeSet<String>();
 		Set<String> pairs = new TreeSet<String>();
@@ -316,7 +337,7 @@ public class GraphUtils{
 				}
 			}
 		}
-		Graph<String, String> graph = createGraph(genes, pairs); 
+		Graph<String, String> graph = createGraphDirected(genes, pairs); 
 		return graph; 
 	}
 	

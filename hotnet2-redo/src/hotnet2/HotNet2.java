@@ -72,7 +72,8 @@ public class HotNet2 {
 		String edgeListFile = "edgeListReactome.txt";
 		String permuteEdgeListFile = "edgeListPermuted";
 		HotNet2 obj = new HotNet2();
-		
+		DeltaSelection ds = new DeltaSelection();
+
 		if (args.length==0){
 			System.err.println("Arg[0] must indicate one of the ReactomeFI files below using a number:");
 			System.err.println("\t 1: FIsInGene_temp.txt\n\t 2: FIsInGene_031516_with_annotations.txt");
@@ -112,6 +113,21 @@ public class HotNet2 {
 				obj.testRandomNetworkPermutationSwitch(directory, 10000, 10);			
 			}
 		}
+		
+		//DeltaSelection
+		if (Integer.parseInt(args[0])==5){
+			System.out.println("Reactome FI network");
+			BigDecimal tempBeta = new BigDecimal (args[1]);
+			ds.selectDeltaWrapper(directory, tempBeta);			
+		}
+		if (Integer.parseInt(args[0])==6){
+			System.out.println("iRefIndex network");
+			BigDecimal tempBeta = new BigDecimal ("0.45");
+			ds.selectDeltaForIrefindexWrapper(directory, tempBeta);			
+		}
+		
+		
+		
 		System.out.println("---------------------------- END ----------------------------");
 	}
 	

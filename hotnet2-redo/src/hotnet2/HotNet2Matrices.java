@@ -33,7 +33,7 @@ public class HotNet2Matrices {
 	
 	@Test
 	public void TestACM() throws IOException{
-		Path currentPath = Paths.get(""); 
+		Path currentPath = Paths.get("");
 		String directory = currentPath.toAbsolutePath().toString();
 		String fiFile = "FIsInGene_temp.txt";
 //		String fiFile = "FIsInGene_031516_with_annotations.txt";
@@ -90,7 +90,7 @@ public class HotNet2Matrices {
 		HashMap<String, Double> heatScoreMap = getHeatScoreMap(directory, heatScoreFile, geneSet);
 		RealMatrix E = createExchangedHeatMatrix(F, geneSet, heatScoreMap);
 		RealMatrix H = identifyHotSubnetworks(E, delta);		
-		obtainSubnetworkSet(H, geneSet);			
+		obtainSubnetworkSet(H, geneSet);
 	}
 
 	@Test
@@ -120,7 +120,6 @@ public class HotNet2Matrices {
 		System.out.println("ojaM: ------------\n" + ojaM);
 		System.out.println("acmM: ------------\n" + acmM);		
 	}
-
 	
 	/**
 	 * Creates Diffusion Matrix F=beta(IdentityMatrix-(1-beta)NormalizedAdjacencyMatrix)^(-1).
@@ -221,11 +220,16 @@ public class HotNet2Matrices {
 	 * @return a diffusion matrix for HotNet2.
 	 */
 	private RealMatrix createDiffusionMatrix (Graph<String, String> graph, Set<String> geneSet, double beta){
-		RealMatrix m = createNormAdjMatrix(graph, geneSet);	
+		RealMatrix m = createNormAdjMatrix(graph, geneSet);
+		System.out.println(m);
 		m = m.scalarMultiply(1-beta);
+		System.out.println(m);
 		int dim = geneSet.size();
 		RealMatrix identityMatrix = MatrixUtils.createRealIdentityMatrix(dim);
+		System.out.println(identityMatrix);
 		m = identityMatrix.subtract(m);
+		System.out.println(m);
+		
 		m = MatrixUtils.inverse(m);
 		m = m.scalarMultiply(beta);
 		return m;
@@ -448,13 +452,23 @@ public class HotNet2Matrices {
 	 * @param geneSet - Set of genes used to determine matrix order.
 	 * @return a set containing sets of genes that form subnetworks.
 	 */
-	private Set<Set<String>> obtainSubnetworkSet (RealMatrix matrix, Set<String> geneSet){
+	public Set<Set<String>> obtainSubnetworkSetWrapper(RealMatrix matrix, Set<String> geneSet){
+		return obtainSubnetworkSet(matrix, geneSet);
+	}
+	
+	/**
+	 * Obtains a set of subnetwork genes.
+	 * @param matrix - Matrix to extract subnetworks from.
+	 * @param geneSet - Set of genes used to determine matrix order.
+	 * @return a set containing sets of genes that form subnetworks.
+	 */
+	private Set<Set<String>> obtainSubnetworkSet(RealMatrix matrix, Set<String> geneSet){
 		GraphUtils gu = new GraphUtils(); 
-		Graph<String, String> graph = gu.covertMatrixToGraphWrapper(matrix, geneSet);
+		Graph<String, String> graph = gu.covertMatrixToDirectedGraphWrapper(matrix, geneSet);
 
 		WeakComponentClusterer<String, String> wcc = new WeakComponentClusterer<String, String>();		
 		Set<Set<String>> components = wcc.transform(graph);
-		System.out.println("There was " + components.size() + " subnetwork(s) identified");
+		System.out.println("There were " + components.size() + " subnetwork(s) identified");
 	
 		List<Set<String>> componentList = new ArrayList<Set<String>>(components);	
 		for (int i=0; i<components.size(); i++){
@@ -466,7 +480,7 @@ public class HotNet2Matrices {
 		}		
 		return components;
 	}
-	
+
 	/**
 	 * Saves specified RealMatrix into a tab delimited file.
 	 * @param directory - Directory to store file.

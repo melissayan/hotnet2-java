@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -32,7 +33,12 @@ public class FileUtils{
 		String largestCompFile = "largestComponentPairs.txt";
 		String geneIndexFile = "geneIndexReactome.txt";
 		String edgeListFile = "edgeListReactome.txt";
-				
+
+		String fiFile = "FIsInGene_031516_with_annotations.txt";
+		GraphUtils gu = new GraphUtils();
+		Graph<String, String> allGenesGraph = gu.createReactomeFIGraphWrapper(directory, fiFile);
+		Graph<String, String> largestComponent = gu.createLargestComponentGraphWrapper(allGenesGraph);
+		
 		convertFileForPythonHotNet2(directory, largestCompFile, geneIndexFile, edgeListFile);
 	}
 	
@@ -178,6 +184,26 @@ public class FileUtils{
 		String filePath = directory + fileName;
 		PrintWriter pw = new PrintWriter(filePath);
 		for(String s: setSave){
+			pw.println(s);
+		}
+		pw.close();
+	}
+	
+	/**
+	 * Saves a list into a file. 
+	 * @param directory - Directory to save the file in.
+	 * @param fileName - Name of file to save list in.
+	 * @param maxCompSizeList - List to be saved.
+	 * @throws IOException
+	 */
+	public void saveListToFile(String directory, String fileName, List<Double> saveList) throws IOException{
+		File file = new File(directory + fileName);
+		file.getParentFile().mkdirs();
+		if (!file.exists())
+			file.createNewFile();
+		String filePath = directory + fileName;
+		PrintWriter pw = new PrintWriter(filePath);
+		for(Double s: saveList){
 			pw.println(s);
 		}
 		pw.close();
