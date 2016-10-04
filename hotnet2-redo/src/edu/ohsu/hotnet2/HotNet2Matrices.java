@@ -1,4 +1,4 @@
-package hotnet2;
+package edu.ohsu.hotnet2;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -26,6 +26,8 @@ import edu.uci.ics.jung.algorithms.cluster.WeakComponentClusterer;
 import edu.uci.ics.jung.graph.Graph;
 
 public class HotNet2Matrices {
+	private FileUtils fu;
+	private GraphUtils gu;
 	
 	public HotNet2Matrices(){
 	
@@ -40,13 +42,12 @@ public class HotNet2Matrices {
 		String heatScoreFile = "heatScore.txt";
 		
 		//Create the largest component using the whole ReactomeFI network graph
-		GraphUtils gu = new GraphUtils();
-		Graph<String, String> allGenesGraph = gu.createReactomeFIGraphWrapper(directory, fiFile);
-		Graph<String, String> largestComponent = gu.createLargestComponentGraphWrapper(allGenesGraph);
+		Graph<String, String> allGenesGraph = gu.createReactomeFIGraph(directory, fiFile);
+		Graph<String, String> largestComponent = gu.createLargestComponentGraph(allGenesGraph);
 		System.out.println("size: " + largestComponent.getVertices().size());
 
 		//Set of genes in the largest component, ordering determines matrix content ordering
-		Set<String> geneSet = gu.getGeneGraphSetWrapper(largestComponent);
+		Set<String> geneSet = gu.getGeneGraphSet(largestComponent);
 		
 		//HotNet2 Algorithm with Apache Commons Math for all steps
 		BigDecimal tempBeta = new BigDecimal("0.5");	//get beta from user
@@ -72,13 +73,12 @@ public class HotNet2Matrices {
 		String heatScoreFile = "heatScore.txt";
 		
 		//Create the largest component using the whole ReactomeFI network graph
-		GraphUtils gu = new GraphUtils();
-		Graph<String, String> allGenesGraph = gu.createReactomeFIGraphWrapper(directory, fiFile);
-		Graph<String, String> largestComponent = gu.createLargestComponentGraphWrapper(allGenesGraph);
+		Graph<String, String> allGenesGraph = gu.createReactomeFIGraph(directory, fiFile);
+		Graph<String, String> largestComponent = gu.createLargestComponentGraph(allGenesGraph);
 		System.out.println("size: " + largestComponent.getVertices().size());
 
 		//Set of genes in the largest component, ordering determines matrix content ordering
-		Set<String> geneSet = gu.getGeneGraphSetWrapper(largestComponent);
+		Set<String> geneSet = gu.getGeneGraphSet(largestComponent);
 		
 		//HotNet2 Algorithm with ojAlgo diffusion
 		BigDecimal tempBeta = new BigDecimal("0.5");	//get beta from user
@@ -102,13 +102,12 @@ public class HotNet2Matrices {
 		String heatScoreFile = "heatScore.txt";
 		
 		//Create the largest component using the whole ReactomeFI network graph
-		GraphUtils gu = new GraphUtils();
-		Graph<String, String> allGenesGraph = gu.createReactomeFIGraphWrapper(directory, fiFile);
-		Graph<String, String> largestComponent = gu.createLargestComponentGraphWrapper(allGenesGraph);
+		Graph<String, String> allGenesGraph = gu.createReactomeFIGraph(directory, fiFile);
+		Graph<String, String> largestComponent = gu.createLargestComponentGraph(allGenesGraph);
 		System.out.println("size: " + largestComponent.getVertices().size());
 
 		//Set of genes in the largest component, ordering determines matrix content ordering
-		Set<String> geneSet = gu.getGeneGraphSetWrapper(largestComponent);
+		Set<String> geneSet = gu.getGeneGraphSet(largestComponent);
 				
 		//HotNet2 Algorithm with ojAlgo diffusion
 		BigDecimal tempBeta = new BigDecimal("0.5");	//get beta from user
@@ -157,9 +156,8 @@ public class HotNet2Matrices {
 	 * @return a normalized adjacency matrix.
 	 */
 	private double[][] createNormAdjMatrixOJA(Graph<String, String> graph, Set<String> geneSet) {
-		GraphUtils gu = new GraphUtils(); 
 		List<String> geneList = new ArrayList<String>(geneSet);
-		List<Integer> degreeList = gu.getGeneDegreeListWrapper(graph, geneSet);		
+		List<Integer> degreeList = gu.getGeneDegreeList(graph, geneSet);		
 		int dim = geneList.size();
 		double[][] m = new double [dim][dim];
 		for (int i=0; i<dim; i++){
@@ -242,10 +240,8 @@ public class HotNet2Matrices {
 	 * @return a normalized adjacency matrix.
 	 */
 	private RealMatrix createNormAdjMatrix(Graph<String, String> graph, Set<String> geneSet) {
-		GraphUtils gu = new GraphUtils();
-		
 		List<String> geneList = new ArrayList<String>(geneSet);
-		List<Integer> degreeList = gu.getGeneDegreeListWrapper(graph, geneSet);		
+		List<Integer> degreeList = gu.getGeneDegreeList(graph, geneSet);		
 		int dim = geneList.size();
 		RealMatrix m = MatrixUtils.createRealMatrix(dim, dim);
 		for (int i=0; i<dim; i++){
@@ -269,6 +265,17 @@ public class HotNet2Matrices {
 	 */
 	public RealMatrix createExchangedHeatMatrixWrapper(String directory, String heatScoreFile, RealMatrix diffusionMatrix, Set<String> geneSet) throws IOException {
 		HashMap<String, Double> heatScoreMap = getHeatScoreMap(directory, heatScoreFile, geneSet);
+		return createExchangedHeatMatrix(diffusionMatrix, geneSet, heatScoreMap);
+	}
+	
+	/**
+	 * Creates Exchanged Heat Matrix, E = F * diagonal heat Matrix.
+	 * @param diffusionMatrix - Diffusion matrix created by createDiffusionMatrix().
+	 * @param geneSet - Set of genes in the graph used to determine matrix order.
+	 * @param heatScoreMap - HashMap with gene as key and heat score as value. 
+	 * @return a exchanged heat matrix for HotNet2
+	 */
+	public RealMatrix createExchangedHeatMatrixUseMapWrapper(RealMatrix diffusionMatrix, Set<String> geneSet, HashMap<String,Double> heatScoreMap) throws IOException {
 		return createExchangedHeatMatrix(diffusionMatrix, geneSet, heatScoreMap);
 	}
 	
@@ -348,10 +355,8 @@ public class HotNet2Matrices {
 	 * @throws IOException 
 	 */
 	private void getMissingHeatGenes(String directory, String heatScoreFile, Graph<String,String> graph) throws IOException{
-		GraphUtils gu = new GraphUtils();
-		FileUtils fu = new FileUtils();
 		String geneMissingHeatFile = "geneMissingHeat.txt";
-		Set<String> geneSet = gu.getGeneGraphSetWrapper(graph);
+		Set<String> geneSet = gu.getGeneGraphSet(graph);
 		Set<String> geneMissingHeat = getMissingHeatScoreGenes(directory, heatScoreFile, geneSet);
 		fu.saveSetToFile(directory+"/output/", geneMissingHeatFile, geneMissingHeat);
 	}
@@ -403,9 +408,8 @@ public class HotNet2Matrices {
 	 * @throws IOException
 	 */
 	private void createTempHeatScoreFile(String directory, String fiFile, String heatScoreFile) throws IOException{
-		FileUtils fu = new FileUtils();
 		Path fiFilePath = Paths.get(directory, fiFile);
-		Set<String> allGenes = fu.getAllGenesReactomeWrapper(fiFilePath);
+		Set<String> allGenes = fu.getAllGenesReactome(fiFilePath);
 		String filePath = directory + "/" + heatScoreFile;
 		PrintWriter pw = new PrintWriter(filePath);
 		Random randomGen = new Random();
@@ -463,11 +467,10 @@ public class HotNet2Matrices {
 	 * @return a set containing sets of genes that form subnetworks.
 	 */
 	private Set<Set<String>> obtainSubnetworkSet(RealMatrix matrix, Set<String> geneSet){
-		GraphUtils gu = new GraphUtils(); 
-		Graph<String, String> graph = gu.covertMatrixToDirectedGraphWrapper(matrix, geneSet);
-
+		Graph<String, String> graph = gu.covertMatrixToDirectedGraph(matrix, geneSet);
 		WeakComponentClusterer<String, String> wcc = new WeakComponentClusterer<String, String>();		
 		Set<Set<String>> components = wcc.transform(graph);
+		
 		System.out.println("There were " + components.size() + " subnetwork(s) identified");
 	
 		List<Set<String>> componentList = new ArrayList<Set<String>>(components);	

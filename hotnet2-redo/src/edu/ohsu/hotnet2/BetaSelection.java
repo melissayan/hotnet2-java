@@ -1,4 +1,4 @@
-package hotnet2;
+package edu.ohsu.hotnet2;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,10 +25,13 @@ import edu.uci.ics.jung.algorithms.importance.BetweennessCentrality;
 import edu.uci.ics.jung.graph.Graph;
 
 public class BetaSelection{
-		private Path currentPath;
-		private String directory;
-		private String betweennessScoreFile;
-		private String influenceFile;
+	private Path currentPath;
+	private String directory;
+	private String betweennessScoreFile;
+	private String influenceFile;
+	private FileUtils fu;
+	private GraphUtils gu;
+	private HotNet2Matrices hn2m;
 		
 	public BetaSelection(){
 		this.currentPath = Paths.get("");
@@ -44,10 +47,6 @@ public class BetaSelection{
 		selectBeta(directory, fiFile, betweennessScoreFile, influenceFile);
 	}
 	
-	public void selectBetaWrapper(String directory, String fiFile, String betweennessScoreFile, String influenceFile) throws IOException{
-		selectBeta(directory, fiFile, betweennessScoreFile, influenceFile);
-	}
-
 	/**
 	 * Selects the beta parameter to assign an amount of heat retained by each gene for creating the diffusion matrix.
 	 * <p>
@@ -58,13 +57,10 @@ public class BetaSelection{
 	 * @param influenceFile - File name for saving influence gene counts.
 	 * @throws IOException
 	 */
-	private void selectBeta(String directory, String fiFile, String betweennessScoreFile, String influenceFile) throws IOException{
-		GraphUtils gu = new GraphUtils();
-		HotNet2Matrices hn2m = new HotNet2Matrices();
-		
+	public void selectBeta(String directory, String fiFile, String betweennessScoreFile, String influenceFile) throws IOException{
 		//Create the largest component using the whole ReactomeFI network graph
-		Graph<String, String> allGenesGraph = gu.createReactomeFIGraphWrapper(directory, fiFile);
-		Graph<String, String> largestComponent = gu.createLargestComponentGraphWrapper(allGenesGraph);
+		Graph<String, String> allGenesGraph = gu.createReactomeFIGraph(directory, fiFile);
+		Graph<String, String> largestComponent = gu.createLargestComponentGraph(allGenesGraph);
 
 		//Calculate and save betweenness centrality for all genes in largest component
 		saveBetweennessCentrality(directory, betweennessScoreFile, largestComponent);
@@ -78,7 +74,7 @@ public class BetaSelection{
 		sourceProteins.add("TP53");
 */		
 		//Generate 20 diffusion matrices with different beta ranging from: 0.05, 0.10, 0.15,..., 1.00
-		Set<String> geneSet = gu.getGeneGraphSetWrapper(largestComponent);
+		Set<String> geneSet = gu.getGeneGraphSet(largestComponent);
 		for(int i=1; i<21; i++){
 			BigDecimal tempBeta = new BigDecimal("0.05");
 			tempBeta = tempBeta.multiply(new BigDecimal(i));
@@ -97,7 +93,7 @@ public class BetaSelection{
 		}
 	
 	}
-
+	
 	/**
 	 * Selects the beta parameter for the iRefIndex network.
 	 * <p>
@@ -108,13 +104,10 @@ public class BetaSelection{
 	 * @param influenceFile - File name for saving influence gene counts.
 	 * @throws IOException
 	 */
-	private void selectBetaForIrefindex(String directory, String file, String betweennessScoreFile, String influenceFile) throws IOException{
-		GraphUtils gu = new GraphUtils();
-		HotNet2Matrices hn2m = new HotNet2Matrices(); 
-		
+	public void selectBetaForIrefindex(String directory, String file, String betweennessScoreFile, String influenceFile) throws IOException{
 		//Create the largest component using the iRefIndex network graph
-		Graph<String, String> allGenesGraph = gu.createReactomeFIGraphWrapper(directory, file);
-		Graph<String, String> largestComponent = gu.createLargestComponentGraphWrapper(allGenesGraph);
+		Graph<String, String> allGenesGraph = gu.createReactomeFIGraph(directory, file);
+		Graph<String, String> largestComponent = gu.createLargestComponentGraph(allGenesGraph);
 		
 		//Get TP53 source protein from iref_edge_list
 		List<String> sourceProteins =  new ArrayList<String>();
@@ -122,7 +115,7 @@ public class BetaSelection{
 //		sourceProteins.add("6911"); //source protein for iref_edge_list_temp
 
 		//Generate diffusion matrix with beta: 0.45
-		Set<String> geneSet = gu.getGeneGraphSetWrapper(largestComponent);
+		Set<String> geneSet = gu.getGeneGraphSet(largestComponent);
 		for(int i=1; i<2; i++){
 			BigDecimal tempBeta = new BigDecimal("0.45");
 			tempBeta = tempBeta.multiply(new BigDecimal(i));
@@ -275,7 +268,6 @@ public class BetaSelection{
 			}
 			String newDirectory = directory +"/inflectionPoint/"; 
 			String newFileName = tempBeta + "_" + fileName;
-			FileUtils fu = new FileUtils();
 			fu.saveSetToFile(newDirectory, newFileName, influenceSet);
 		}
 	}

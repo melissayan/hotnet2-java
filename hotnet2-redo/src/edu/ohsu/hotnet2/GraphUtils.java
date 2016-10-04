@@ -1,6 +1,4 @@
-package hotnet2;
-
-import hotnet2.FileUtils;
+package edu.ohsu.hotnet2;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,7 +22,6 @@ import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.UndirectedSparseGraph;
 
 public class GraphUtils{
-	
 	private Path currentPath; 
 	private String directory; 
 	private String fiFile;
@@ -35,6 +32,7 @@ public class GraphUtils{
 	private String refLargestCompFile;
 	private String geneIndexFile;
 	private String edgeListFile;
+	private FileUtils fu;
 	
 	public GraphUtils(){
 		this.currentPath = Paths.get("");
@@ -53,29 +51,7 @@ public class GraphUtils{
 	public void setFifile(String reactomeFileName){
 		this.fiFile = reactomeFileName;
 	}
-	
-	/**
-	 * Saves 3 files related to the Reactome FI network graph.
-	 * <p>
-	 * Files:
-	 * <ul>
-	 * <li>All genes from the Reactome FI network.
-	 * <li>All interaction pairs from the Reactome FI network.
-	 * <li>All interaction pairs from the largest component in the Reactome FI network.
-	 * </ul>
-	 * <b>Note:</b> this can also check that the largest component found matches the largest component in a reference file.
-	 * <p>
-	 * @param directory	- Directory of Reactome FI network file and place to save files.
-	 * @param fiFile - Reactome FI network file name.
-	 * @param allGenesFile - File name for genes in the Reactome FI network. 
-	 * @param allPairsFile - File name for all interaction pairs in the Reactome FI network.
-	 * @param largestCompFile - File name for interaction pairs from the largest component.
-	 * @throws IOException
-	 */
-	public void saveReactomeFIGraphFilesWrapper(String directory, String fiFile, String allGenesFile, String allPairsFile, String largestCompFile) throws IOException{
-		saveReactomeFIGraphFiles(directory, fiFile, allGenesFile, allPairsFile, largestCompFile);
-	}
-	
+		
 	/**
 	 * Saves 3 files related to the Reactome FI network:
 	 * <p>
@@ -93,16 +69,15 @@ public class GraphUtils{
 	 * @param largestCompFile - File name for interaction pairs from the largest component.
 	 * @throws IOException
 	 */
-	private void saveReactomeFIGraphFiles(String directory, String fiFile, String allGenesFile, String allPairsFile, String largestCompFile) throws IOException{
+	public void saveReactomeFIGraphFiles(String directory, String fiFile, String allGenesFile, String allPairsFile, String largestCompFile) throws IOException{
 		Path fiFilePath = Paths.get(directory, fiFile);
-		FileUtils fu = new FileUtils();
 		
 		//Get all genes from interaction file and save
-		Set<String> allGenes = fu.getAllGenesReactomeWrapper(fiFilePath);
+		Set<String> allGenes = fu.getAllGenesReactome(fiFilePath);
 		fu.saveSetToFile(directory+"/output/", allGenesFile, allGenes);
 		
 		//Get all interaction pairs from interaction file and save
-		Set<String> allPairs = fu.getAllInteractionPairsReactomeWrapper(fiFilePath);
+		Set<String> allPairs = fu.getAllInteractionPairsReactome(fiFilePath);
 		fu.saveSetToFile(directory+"/output/", allPairsFile, allPairs);
 		
 		//Create graph, get largest component, and save the interaction pairs in the largest component
@@ -114,7 +89,7 @@ public class GraphUtils{
 		//Check that interaction pairs in largest component matches reference file
 		fu.compareFiles(directory, refLargestCompFile, "/output/"+largestCompFile);
 	}
-	
+		
 	/**
 	 * Creates a graph of the whole Reactome FI network.
 	 * @param directory - Directory of Reactome FI network file and place to save files.
@@ -122,34 +97,13 @@ public class GraphUtils{
 	 * @return a graph of the whole Reactome FI network.
 	 * @throws IOException
 	 */
-	public Graph<String, String> createReactomeFIGraphWrapper(String directory, String fiFile) throws IOException{
-		return createReactomeFIGraph(directory, fiFile);
-	}
-	
-	/**
-	 * Creates a graph of the whole Reactome FI network.
-	 * @param directory - Directory of Reactome FI network file and place to save files.
-	 * @param fiFile - Reactome FI network file name.
-	 * @return a graph of the whole Reactome FI network.
-	 * @throws IOException
-	 */
-	private Graph<String, String> createReactomeFIGraph(String directory, String fiFile) throws IOException{
+	public Graph<String, String> createReactomeFIGraph(String directory, String fiFile) throws IOException{
 		FileUtils fu = new FileUtils();
 		Path fiFilePath = Paths.get(directory, fiFile);
-		Set<String> allGenes = fu.getAllGenesReactomeWrapper(fiFilePath);
-		Set<String> allPairs = fu.getAllInteractionPairsReactomeWrapper(fiFilePath);
+		Set<String> allGenes = fu.getAllGenesReactome(fiFilePath);
+		Set<String> allPairs = fu.getAllInteractionPairsReactome(fiFilePath);
 		Graph<String, String> allGenesGraph = createGraph(allGenes, allPairs);
 		return allGenesGraph; 
-	}
-	
-	/**
-	 * Creates a graph.
-	 * @param genes - Set of genes in the graph.
-	 * @param pairs	- Set of interaction pairs in the graph.
-	 * @return a undirected graph. 
-	 */
-	public Graph<String,String> createGraphWrapper (Set<String> genes, Set<String> pairs){
-		return createGraph(genes, pairs);
 	}
 	
 	/**
@@ -158,7 +112,7 @@ public class GraphUtils{
 	 * @param pairs - Set of interaction pairs in the graph.
 	 * @return a undirected graph. 
 	 */
-	private Graph<String,String> createGraph (Set<String> genes, Set<String> pairs){
+	public Graph<String,String> createGraph (Set<String> genes, Set<String> pairs){
 		Graph<String, String> graph = new UndirectedSparseGraph<String, String>();	
 		for (String g: genes)
 			graph.addVertex(g);
@@ -209,22 +163,13 @@ public class GraphUtils{
 		}
 		return largestComponent; 
 	}
-	
-	/**
-	 * Creates a graph of only the largest component.
-	 * @param graph - Graph of network.
-	 * @return a graph of only the largest component within provided network.
-	 */
-	public Graph<String, String> createLargestComponentGraphWrapper (Graph<String, String> graph){
-		return createLargestComponentGraph(graph);
-	}
-	
+		
 	/**
 	 * Creates a graph of only the largest component.
 	 * @param graph - Graph of network.
 	 * @return	a graph of only the largest component within provided network.
 	 */
-	private Graph<String, String> createLargestComponentGraph (Graph<String, String> graph){
+	public Graph<String, String> createLargestComponentGraph (Graph<String, String> graph){
 		Set<String> genes = getLargestComponent(graph);
 		Graph<String, String> largestComponentGraph = FilterUtils.createInducedSubgraph(genes,graph);	
 		return largestComponentGraph; 
@@ -232,19 +177,10 @@ public class GraphUtils{
 	
 	/**
 	 * Gets interaction pairs from a graph.
-	 * @param graph - Graph for extracting edges.
-	 * @return	a set containing the graph's interaction pairs.   
-	 */
-	public Set<String> getPairsWrapper(Graph<String, String> graph){
-		return getPairs(graph);
-	}
-	
-	/**
-	 * Gets interaction pairs from a graph.
 	 * @param graph - graph for extracting edges.
 	 * @return a set containing the graph's interaction pairs.  
 	 */
-	private Set<String> getPairs(Graph<String, String> graph){
+	public Set<String> getPairs(Graph<String, String> graph){
 		Set<String> pairs = new HashSet<String>();
 		for (String v: graph.getVertices()){
 			for (String e: graph.getEdges()){
@@ -258,20 +194,11 @@ public class GraphUtils{
 	}
 	
 	/**
-	 * Gets an ordered set of genes in the graph
-	 * @param graph	- Graph used to obtain genes from. 
-	 * @return a ordered set of genes from the graph.
-	 */
-	public Set<String> getGeneGraphSetWrapper(Graph<String, String> graph){
-		return getGeneGraphSet(graph);
-	}
-	
-	/**
 	 * Gets an ordered set of genes in the graph.
 	 * @param graph	- Graph used to obtain genes from. 
 	 * @return a ordered set of genes from the graph.
 	 */
-	private Set<String> getGeneGraphSet (Graph<String, String> graph){
+	public Set<String> getGeneGraphSet (Graph<String, String> graph){
 		Set<String> geneSet = new TreeSet<String>();
 		for (String vertex: graph.getVertices())
 			geneSet.add(vertex);
@@ -284,34 +211,13 @@ public class GraphUtils{
 	 * @param geneSet - Set of genes from the graph used to determine the list order of gene degree.  
 	 * @return a list containing the degree for each gene in the provided set.
 	 */
-	public List<Integer> getGeneDegreeListWrapper(Graph<String,String> graph, Set<String> geneSet){
-		return getGeneDegreeList(graph, geneSet);
-	}
-	
-	/**
-	 * Gets a list of degree for each gene in the provided set.  
-	 * @param graph	- Graph used to obtain degree from for each gene.
-	 * @param geneSet - Set of genes from the graph used to determine the list order of gene degree.  
-	 * @return a list containing the degree for each gene in the provided set.
-	 */
-	private List<Integer> getGeneDegreeList(Graph<String,String> graph, Set<String> geneSet){
+	public List<Integer> getGeneDegreeList(Graph<String,String> graph, Set<String> geneSet){
 		List<Integer> degreeList = new ArrayList<Integer>();
 		List<String> geneList = new ArrayList<String>(geneSet);
 		for (String g: geneList){
-//			graph.getOutEdges(g);
 			degreeList.add(graph.getOutEdges(g).size());
 		}
 		return degreeList;
-	}
-	
-	/**
-	 * Converts the provided RealMatrix into a graph. 
-	 * @param matrix - Matrix to convert into graph.
-	 * @param geneSet - Set of genes used to determine matrix order.
-	 * @return a graph generated from the matrix
-	 */
-	public Graph<String, String> covertMatrixToDirectedGraphWrapper (RealMatrix matrix, Set<String> geneSet){
-		return covertMatrixToDirectedGraph(matrix, geneSet);
 	}
 	
 	/**
@@ -320,7 +226,7 @@ public class GraphUtils{
 	 * @param geneSet - Set of genes used to determine matrix order.
 	 * @return a directed graph generated from the matrix
 	 */
-	private Graph<String, String> covertMatrixToDirectedGraph (RealMatrix matrix, Set<String> geneSet){
+	public Graph<String, String> covertMatrixToDirectedGraph (RealMatrix matrix, Set<String> geneSet){
 		List<String> geneList = new ArrayList<String>(geneSet);
 		Set<String> genes = new TreeSet<String>();
 		Set<String> pairs = new TreeSet<String>();
@@ -348,18 +254,7 @@ public class GraphUtils{
 	 * @param graph	- Graph used to create degree HashMap.
 	 * @return a HashMap with gene as key and gene's degree as value.
 	 */
-	public HashMap<String, Integer> getDegreeMapWrapper(Graph<String,String> graph){
-		return getDegreeMap(graph);
-	}
-	
-	/**
-	 * Gets a degree hash map of a graph using gene as key and degree as value.
-	 * <p>
-	 * Based on Python NetworkX's <a href="https://networkx.readthedocs.io/en/stable/_modules/networkx/classes/graph.html#Graph.degree">Graph.degree()</a>.
-	 * @param graph	- Graph used to create degree HashMap.
-	 * @return a HashMap with gene as key and gene's degree as value.
-	 */
-	private HashMap<String, Integer> getDegreeMap(Graph<String,String> graph){
+	public HashMap<String, Integer> getDegreeMap(Graph<String,String> graph){
 		HashMap<String, Integer> degreeMap = new HashMap<String, Integer>();
 		for (String v: graph.getVertices())
 			degreeMap.put(v, graph.getOutEdges(v).size());
