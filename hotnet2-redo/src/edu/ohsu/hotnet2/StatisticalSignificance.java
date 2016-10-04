@@ -19,9 +19,6 @@ import edu.uci.ics.jung.algorithms.cluster.WeakComponentClusterer;
 import edu.uci.ics.jung.graph.Graph;
 
 public class StatisticalSignificance{
-	private FileUtils fu;
-	private GraphUtils gu;
-	private HotNet2Matrices hn2m;
 	
 	public StatisticalSignificance(){
 		
@@ -65,6 +62,8 @@ public class StatisticalSignificance{
 	}
 	
 	private HashMap<Integer, Integer> obtainSubnetworkSizeToCountSumMapReal(String directory, double beta, double delta) throws IOException{
+		FileUtils fu = new FileUtils();
+		GraphUtils gu = new GraphUtils();
 		HashMap<Integer, Integer> sumSizeCountMap = new HashMap<Integer, Integer>();
 		//Create set of genes in network and HashMap of gene index to allow gene names in graph instead of numbers
 		String geneIndexDirectory = directory;
@@ -106,9 +105,10 @@ public class StatisticalSignificance{
 		return sizeToCountMap;
 	}
 	
-	
 	//For all random networks, get a sum of greater or equal counts of subnetwork sizes
 	private HashMap<Integer, Integer> obtainSubnetworkSizeToCountSumMapPermuted(String directory, double beta, double delta) throws IOException{
+		FileUtils fu = new FileUtils();
+		GraphUtils gu = new GraphUtils();
 		HashMap<Integer, Integer> sumSizeCountMap = new HashMap<Integer, Integer>();
 		//Create set of genes in network and HashMap of gene index to allow gene names in graph instead of numbers
 		String geneIndexDirectory = directory + "/PythonPermutation/";
@@ -163,11 +163,14 @@ public class StatisticalSignificance{
 	 * @throws IOException
 	 */
 	private HashMap<Integer, Integer> obtainIndividualSubnetworkSizeCount(String heatScoreDirectory, String heatScoreFile, Graph<String, String> graph, double beta, double delta) throws IOException{
+		FileUtils fu = new FileUtils();
+		GraphUtils gu = new GraphUtils();
+		HotNet2Matrix hn2m = new HotNet2Matrix();
 		Set<String> geneSet = gu.getGeneGraphSet(graph);
-		PrimitiveMatrix tempF = hn2m.createDiffusionMatrixOJAWrapper(graph, geneSet, beta);
-		RealMatrix F = hn2m.convertOJAToACMWrapper(tempF);	
-		RealMatrix E = hn2m.createExchangedHeatMatrixWrapper(heatScoreDirectory, heatScoreFile, F, geneSet);
-		RealMatrix H = hn2m.identifyHotSubnetworksWrapper(E, delta);
+		PrimitiveMatrix tempF = hn2m.createDiffusionMatrixOJA(graph, geneSet, beta);
+		RealMatrix F = hn2m.convertOJAToACM(tempF);	
+		RealMatrix E = hn2m.createExchangedHeatMatrix(heatScoreDirectory, heatScoreFile, F, geneSet);
+		RealMatrix H = hn2m.identifyHotSubnetworks(E, delta);
 		Graph<String, String> graphFromMatrix = gu.covertMatrixToDirectedGraph(H, geneSet);
 		WeakComponentClusterer<String, String> wcc = new WeakComponentClusterer<String, String>();		
 		Set<Set<String>> components = wcc.transform(graphFromMatrix);

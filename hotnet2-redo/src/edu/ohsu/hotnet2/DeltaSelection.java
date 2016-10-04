@@ -29,14 +29,10 @@ import edu.uci.ics.jung.graph.Graph;
 public class DeltaSelection{
 	private Path currentPath;
 	private String directory;
-	private FileUtils fu;
-	private GraphUtils gu;
-	private HotNet2Matrices hn2m;
 
 	public DeltaSelection(){
 		this.currentPath = Paths.get("");
 		this.directory = currentPath.toAbsolutePath().toString();
-		
 	}
 	
 	@Test
@@ -63,6 +59,8 @@ public class DeltaSelection{
 	 * @throws IOException
 	 */
 	public void selectDeltaByCompSize(String directory, double beta, int numPermutation) throws IOException{
+		FileUtils fu = new FileUtils();
+		GraphUtils gu = new GraphUtils();
 		//Create set of genes in network and HashMap of gene index to allow gene names in graph instead of numbers
 		String geneIndexDirectory = directory + "/PythonPermutation/";
 		String geneIndexFile = "geneIndexReactome.txt";
@@ -132,6 +130,8 @@ public class DeltaSelection{
 	 * @throws IOException
 	 */
 	public void selectDeltaForIrefindexByCompSize(String directory, double beta, int numPermutation) throws IOException{
+		FileUtils fu = new FileUtils();
+		GraphUtils gu = new GraphUtils(); 
 		//Create set of genes in network and HashMap of gene index to allow gene names in graph instead of numbers
 		String geneIndexDirectory = directory + "/PythonPermutation_Irefindex/";
 		String geneIndexFile = "iref_index_genes";
@@ -160,9 +160,9 @@ public class DeltaSelection{
 				System.out.println("Provided permuted graph " + edgeListFile + " is not connected, it has " + components + " components.");
 			}
 			//Store smallest delta value corresponding with maximum component size 10
-/*			HashMap<Integer, Double> compSizeToDeltaMap = getByCompSizeMapIrefindex(heatScoreDirectory, heatScoreFile, beta, largestComponent);
+			HashMap<Integer, Double> compSizeToDeltaMap = getByCompSizeMapIrefindex(heatScoreDirectory, heatScoreFile, beta, largestComponent);
 			maxCompSize10.add(compSizeToDeltaMap.get(10));
-*/			long end1 = System.currentTimeMillis();
+			long end1 = System.currentTimeMillis();
 			System.out.println(iterations + "\t" + edgeListFile + "\t" + (end1-start1) + "\tms");
 			iterations += 1;
 			 if (++i > numPermutation)
@@ -186,10 +186,12 @@ public class DeltaSelection{
 	 * @throws IOException
 	 */
 	private HashMap<Integer, Double> getByCompSizeMap(String heatScoreDirectory, String heatScoreFile, double beta, Graph<String,String> graph) throws IOException{
+		GraphUtils gu = new GraphUtils();
+		HotNet2Matrix hn2m = new HotNet2Matrix(); 
 		Set<String> geneSet = gu.getGeneGraphSet(graph);
-		PrimitiveMatrix tempF = hn2m.createDiffusionMatrixOJAWrapper(graph, geneSet, beta);
-		RealMatrix F = hn2m.convertOJAToACMWrapper(tempF);	
-		RealMatrix ExchangedHeatMatrix = hn2m.createExchangedHeatMatrixWrapper(heatScoreDirectory, heatScoreFile, F, geneSet);
+		PrimitiveMatrix tempF = hn2m.createDiffusionMatrixOJA(graph, geneSet, beta);
+		RealMatrix F = hn2m.convertOJAToACM(tempF);	
+		RealMatrix ExchangedHeatMatrix = hn2m.createExchangedHeatMatrix(heatScoreDirectory, heatScoreFile, F, geneSet);
 		List<Integer> sizes = new ArrayList<Integer>();
 		sizes.add(5);
 		sizes.add(10);
@@ -209,10 +211,12 @@ public class DeltaSelection{
 	 * @throws IOException
 	 */
 	private HashMap<Integer, Double> getByCompSizeMapIrefindex(String heatScoreDirectory, String heatScoreFile, double beta, Graph<String,String> graph) throws IOException{
+		GraphUtils gu = new GraphUtils();
+		HotNet2Matrix hn2m = new HotNet2Matrix(); 
 		Set<String> geneSet = gu.getGeneGraphSet(graph);
-		PrimitiveMatrix tempF = hn2m.createDiffusionMatrixOJAWrapper(graph, geneSet, beta);
-		RealMatrix F = hn2m.convertOJAToACMWrapper(tempF);
-		RealMatrix ExchangedHeatMatrix = hn2m.createExchangedHeatMatrixWrapper(heatScoreDirectory, heatScoreFile, F, geneSet);
+		PrimitiveMatrix tempF = hn2m.createDiffusionMatrixOJA(graph, geneSet, beta);
+		RealMatrix F = hn2m.convertOJAToACM(tempF);
+		RealMatrix ExchangedHeatMatrix = hn2m.createExchangedHeatMatrix(heatScoreDirectory, heatScoreFile, F, geneSet);
 		List<Integer> sizes = new ArrayList<Integer>();
 		sizes.add(10);
 		HashMap<Integer, Double> compSizeToDeltaMap = selectDeltaForDiffCompSizes(geneSet, ExchangedHeatMatrix, sizes);
@@ -231,6 +235,7 @@ public class DeltaSelection{
 	 * @throws IOException
 	 */
 	private HashMap<Integer, Double> selectDeltaForDiffCompSizes(Set<String> geneSet, RealMatrix ExchangedHeatMatrix, List<Integer> sizeList) throws IOException{
+		HotNet2Matrix hn2m = new HotNet2Matrix(); 
 		HashMap<Integer, Double> compSizeToDeltaMap = new HashMap<Integer, Double>();
 		for (Integer size: sizeList){
 			double delta = -1;
@@ -242,7 +247,7 @@ public class DeltaSelection{
 			while(visitedDelta.size() < 100){
 				//Construct new matrix using new delta
 				delta = sortedEdgeWeights.get(index);
-				RealMatrix H = hn2m.identifyHotSubnetworksWrapper(ExchangedHeatMatrix, delta);
+				RealMatrix H = hn2m.identifyHotSubnetworks(ExchangedHeatMatrix, delta);
 				int maxSubnetworkSize = obtainLargestSubnetworkSize(H, geneSet);
 				if (visitedDelta.contains(delta)){
 					compSizeToDeltaMap.put(size, delta);
@@ -272,6 +277,7 @@ public class DeltaSelection{
 	 * @return the value of the largest component size.
 	 */
 	private int obtainLargestSubnetworkSize(RealMatrix matrix, Set<String> geneSet){
+		GraphUtils gu = new GraphUtils();
 		Graph<String, String> graph = gu.covertMatrixToDirectedGraph(matrix, geneSet);
 		WeakComponentClusterer<String, String> wcc = new WeakComponentClusterer<String, String>();		
 		Set<Set<String>> components = wcc.transform(graph);
@@ -307,6 +313,9 @@ public class DeltaSelection{
 	 * @throws IOException
 	 */
 	public void selectDeltaByHeatScore (String directory, double beta, int numPermutation) throws IOException{
+		FileUtils fu = new FileUtils();
+		GraphUtils gu = new GraphUtils();
+		HotNet2Matrix hn2m = new HotNet2Matrix(); 
 		//Create largest component in graph 
 		String fiFile = "FIsInGene_031516_with_annotations.txt";
 		Graph<String, String> allGenesGraph = gu.createReactomeFIGraph(directory, fiFile);
@@ -322,11 +331,11 @@ public class DeltaSelection{
 		String heatScoreFile = "heatScore.txt";
 		List<Double> scoreList = getHeatScoreListAll(heatScoreDirectory, heatScoreFile);
 		//Use random heat scores to obtain delta
-		PrimitiveMatrix tempF = hn2m.createDiffusionMatrixOJAWrapper(graph, geneSet, beta);
-		RealMatrix F = hn2m.convertOJAToACMWrapper(tempF);
+		PrimitiveMatrix tempF = hn2m.createDiffusionMatrixOJA(graph, geneSet, beta);
+		RealMatrix F = hn2m.convertOJAToACM(tempF);
 		for (int i=0; i<numPermutation; i++){
 			HashMap<String, Double> randomHeatScoreMap = createRandomHeatScoreMap(geneSet, scoreList);
-			RealMatrix ExchangedHeatMatrix = hn2m.createExchangedHeatMatrixUseMapWrapper(F, geneSet, randomHeatScoreMap);	
+			RealMatrix ExchangedHeatMatrix = hn2m.createExchangedHeatMatrixUseMap(F, geneSet, randomHeatScoreMap);	
 			List<Integer> sizes = new ArrayList<Integer>();
 			sizes.add(5);
 			sizes.add(10);
