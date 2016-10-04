@@ -1,4 +1,4 @@
-package hotnet2;
+package edu.ohsu.hotnet2;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -9,6 +9,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -36,8 +37,8 @@ public class FileUtils{
 
 		String fiFile = "FIsInGene_031516_with_annotations.txt";
 		GraphUtils gu = new GraphUtils();
-		Graph<String, String> allGenesGraph = gu.createReactomeFIGraphWrapper(directory, fiFile);
-		Graph<String, String> largestComponent = gu.createLargestComponentGraphWrapper(allGenesGraph);
+		Graph<String, String> allGenesGraph = gu.createReactomeFIGraph(directory, fiFile);
+		Graph<String, String> largestComponent = gu.createLargestComponentGraph(allGenesGraph);
 		
 		convertFileForPythonHotNet2(directory, largestCompFile, geneIndexFile, edgeListFile);
 	}
@@ -141,7 +142,7 @@ public class FileUtils{
 	 * @return the name of the newly modified file.
 	 * @throws IOException
 	 */
-	private String modifyEdgeFileToTabDelimited(String directory, String fileToModify, Boolean header, String delimiter) throws IOException{
+	public String modifyEdgeFileToTabDelimited(String directory, String fileToModify, Boolean header, String delimiter) throws IOException{
 		//Set up for file that will get modified
 		Path path = Paths.get(directory, fileToModify);
 		Set<String> genes = new HashSet<String>();
@@ -210,6 +211,27 @@ public class FileUtils{
 	}
 	
 	/**
+	 * Saves a HashMap into a file.
+	 * @param directory - Directory to save the file in.
+	 * @param fileName - Name of file to save list in.
+	 * @param map - Map to be saved
+	 * @throws IOException 
+	 */
+	public void saveHashMapToFile(String directory, String fileName, HashMap<Integer, Integer> map) throws IOException{
+		File file = new File(directory + fileName);
+		file.getParentFile().mkdirs();
+		if (!file.exists())
+			file.createNewFile();
+		String filePath = directory + fileName;
+		PrintWriter pw = new PrintWriter(filePath);
+		List<Integer> keylist = new ArrayList<Integer>(map.keySet()); 
+		for(int key: keylist){
+			pw.println(key + "\t" + map.get(key));
+		}
+		pw.close();		
+	}
+	
+	/**
 	 * Compares 2 different files for similarities and differences.
 	 * <p>
 	 * <b>Note:</b> files must be in same directory. 
@@ -235,24 +257,13 @@ public class FileUtils{
 		}
 	}
 
-	
 	/**
 	 * Gets all genes from the Reactome FI network text file.
 	 * @param path - Path to file location.
 	 * @return a set containing all genes
 	 * @throws IOException
 	 */
-	public Set<String> getAllGenesReactomeWrapper(Path path) throws IOException{
-		return getAllGenesReactome(path);
-	}
-	
-	/**
-	 * Gets all genes from the Reactome FI network text file.
-	 * @param path - Path to file location.
-	 * @return a set containing all genes
-	 * @throws IOException
-	 */
-	private Set<String> getAllGenesReactome(Path path) throws IOException{
+	public Set<String> getAllGenesReactome(Path path) throws IOException{
 		Set<String> genes = new HashSet<String>();
 		Charset charset = Charset.forName("UTF-8");
 		BufferedReader br = Files.newBufferedReader(path, charset);
@@ -274,17 +285,7 @@ public class FileUtils{
 	 * @return a set containing all interaction pairs.
 	 * @throws IOException
 	 */
-	public Set<String> getAllInteractionPairsReactomeWrapper(Path path) throws IOException{
-		return getAllInteractionPairsReactome(path);
-	}
-	
-	/**
-	 * Gets all interaction pairs from the Reactome FI network text file.
-	 * @param path - Path to the file location.
-	 * @return a set containing all interaction pairs.
-	 * @throws IOException
-	 */
-	private Set<String> getAllInteractionPairsReactome(Path path) throws IOException{
+	public Set<String> getAllInteractionPairsReactome(Path path) throws IOException{
 		Set<String> pairs = new HashSet<String>();
 		Charset charset = Charset.forName("UTF-8");
 		BufferedReader br = Files.newBufferedReader(path, charset);
@@ -298,17 +299,6 @@ public class FileUtils{
 		br.close();
 		return pairs;
 	}
-
-	/**
-	 * Gets all genes from any network text file with specified delimiter and header.
-	 * @param path - Path to file location.
-	 * @param delimiter - Delimiter that separates columns in file.
-	 * @return a set containing all genes.
-	 * @throws IOException
-	 */
-	public Set<String> getAllGenesWrapper(Path path, String delimiter) throws IOException{
-		return getAllGenes(path, delimiter);
-	}
 	
 	/**
 	 * Gets all genes from any network text file with specified delimiter and header.
@@ -317,7 +307,7 @@ public class FileUtils{
 	 * @return a set containing all genes.
 	 * @throws IOException
 	 */
-	private Set<String> getAllGenes(Path path, String delimiter) throws IOException{
+	public Set<String> getAllGenes(Path path, String delimiter) throws IOException{
 		Set<String> genes = new HashSet<String>();
 		Charset charset = Charset.forName("UTF-8");
 		BufferedReader br = Files.newBufferedReader(path, charset);
@@ -340,18 +330,7 @@ public class FileUtils{
 	 * @return a set containing all interaction pairs.
 	 * @throws IOException
 	 */
-	public Set<String> getAllInteractionPairsWrapper(Path path, String delimiter) throws IOException{
-		return getAllInteractionPairs(path, delimiter);
-	}
-	
-	/**
-	 * Gets all interaction pairs from any network text file with specified delimiter and header. 
-	 * @param path - Path to the file location.
-	 * @param delimiter - Delimiter that separates columns in file.
-	 * @return a set containing all interaction pairs.
-	 * @throws IOException
-	 */
-	private Set<String> getAllInteractionPairs(Path path, String delimiter) throws IOException{
+	public Set<String> getAllInteractionPairs(Path path, String delimiter) throws IOException{
 		Set<String> pairs = new HashSet<String>();
 		Charset charset = Charset.forName("UTF-8");
 		BufferedReader br = Files.newBufferedReader(path, charset);
@@ -372,17 +351,7 @@ public class FileUtils{
 	 * @return a set containing all genes.
 	 * @throws IOException
 	 */
-	public Set<String> getAllGenesWrapper(Path path) throws IOException{
-		return getAllGenes(path);
-	}
-	
-	/**
-	 * Gets all genes from network text file without a header.
-	 * @param path - Path to file location.
-	 * @return a set containing all genes.
-	 * @throws IOException
-	 */
-	private Set<String> getAllGenes(Path path) throws IOException{
+	public Set<String> getAllGenes(Path path) throws IOException{
 		Set<String> genes = new HashSet<String>();
 		Charset charset = Charset.forName("UTF-8");
 		BufferedReader br = Files.newBufferedReader(path, charset);
@@ -403,17 +372,7 @@ public class FileUtils{
 	 * @return a set containing all interaction pairs.
 	 * @throws IOException
 	 */
-	public Set<String> getAllInteractionPairsWrapper(Path path) throws IOException{
-		return getAllInteractionPairs(path);
-	}
-	
-	/**
-	 * Gets all interaction pairs from network text file without a header.
-	 * @param path - Path to the file location.
-	 * @return a set containing all interaction pairs.
-	 * @throws IOException
-	 */
-	private Set<String> getAllInteractionPairs(Path path) throws IOException{
+	public Set<String> getAllInteractionPairs(Path path) throws IOException{
 		Set<String> pairs = new HashSet<String>();
 		Charset charset = Charset.forName("UTF-8");
 		BufferedReader br = Files.newBufferedReader(path, charset);
@@ -437,7 +396,7 @@ public class FileUtils{
 	 * @param edgeListFile - File name where the gene pairs will be saved.
 	 * @throws IOException
 	 */
-	private void convertFileForPythonHotNet2(String directory, String largestCompFile, String geneIndexFile, String edgeListFile) throws IOException{
+	public void convertFileForPythonHotNet2(String directory, String largestCompFile, String geneIndexFile, String edgeListFile) throws IOException{
 		Path largeCompFilePath = Paths.get(directory+"/output/", largestCompFile);
 
 		//Get all genes and all interaction pairs from largest Component file
@@ -446,10 +405,10 @@ public class FileUtils{
 		
 		//Create graph and get the largest component (this checks to ensure file only has 1 component)
 		GraphUtils gu = new GraphUtils();
-		Graph<String, String> allGenesGraph = gu.createGraphWrapper(allGenes, allPairs);
-		Graph<String, String> largestComponent = gu.createLargestComponentGraphWrapper(allGenesGraph);
-		Set<String> geneSet = gu.getGeneGraphSetWrapper(largestComponent);
-		Set<String> genePairs = gu.getPairsWrapper(largestComponent);
+		Graph<String, String> allGenesGraph = gu.createGraph(allGenes, allPairs);
+		Graph<String, String> largestComponent = gu.createLargestComponentGraph(allGenesGraph);
+		Set<String> geneSet = gu.getGeneGraphSet(largestComponent);
+		Set<String> genePairs = gu.getPairs(largestComponent);
 		
 		//Create gene index file and a hash map with the gene and index for use in creating the edge list file
 		File geneFile = new File(directory + "/output/" + geneIndexFile);
@@ -484,4 +443,75 @@ public class FileUtils{
 		ePw.close();
 	}
 	
+	/**
+	 * Get a set of all genes in the Python HotNet2 gene index file.
+	 * @param directory - Directory containing the gene index file provided to the Python version of HotNet2
+	 * @param fileName - File name containing gene index.
+	 * @return a set of genes obtained from the provided file. 
+	 * @throws IOException
+	 */
+	public Set<String> getAllGenesPY(String directory, String fileName, String delimiter) throws IOException{
+		Set<String> genes = new TreeSet<String>();
+		Path filePath = Paths.get(directory, fileName);
+		Charset charset = Charset.forName("UTF-8");
+		BufferedReader br = Files.newBufferedReader(filePath, charset);	
+		for (String line = null; (line = br.readLine()) != null;){
+			String[] row = line.split(delimiter);
+			String gene = row[1].replace("_", " "); //Python code skips whitespace, so provided file had spaces replaced with "_" and it must be reversed to retain original Java genes
+			genes.add(gene);
+		}
+		br.close();
+		return genes;
+	}
+
+	////// Should this be HashMap<Integer, String> instead? then would need to convert getAllInteractionPairsPY genes to Integers
+	/**
+	 * Get a HashMap of genes corresponding to the Python HotNet2 gene index file.
+	 * <p>
+	 * <b>Note:</b> HotNet2 Python version skips whitespace so only part of gene name is kept, to ensure Python code didn't change gene names, the spaces are replaced with "_". 
+	 * @param directory - Directory containing the gene index file provided to the Python version of HotNet2. 
+	 * @param fileName - File containing the index and gene provided to the Python version of HotNet2.
+	 * @return a HashMap containing the gene index as key and gene name as value.
+	 * @throws IOException
+	 */
+	public HashMap<String,String> getGeneIndexNamePY (String directory, String fileName, String delimiter) throws IOException{
+		HashMap<String, String> geneIndex = new HashMap<String, String>();
+		Path filePath = Paths.get(directory, fileName);
+		Charset charset = Charset.forName("UTF-8");
+		BufferedReader br = Files.newBufferedReader(filePath, charset);	
+		for (String line = null; (line = br.readLine()) != null;){
+			String[] row = line.split(delimiter);
+			String index = row[0];
+			String gene = row[1].replace("_", " "); //Python code skips whitespace, so provided file had spaces replaced with "_" and it must be reversed to retain original Java genes
+			geneIndex.put(index, gene);
+		}
+		br.close();
+		return geneIndex;
+	}
+
+	/**
+	 * Get all interaction pairs from a Python HotNet2 generated edge list file and match genes with the corresponding gene name
+	 * @param directory - Directory containing gene pairs file.
+	 * @param fileName - File containing gene pairs created by the Python version of HotNet2.
+	 * @param geneIndex - HashMap matching gene index to gene name from {@link #getGeneIndexNamePY(String, String)}.
+	 * @return a set containing all interaction pairs within the provided file.
+	 * @throws IOException
+	 */
+	public Set<String> getAllInteractionPairsPY(String directory, String fileName, HashMap<String,String> geneIndex, String delimiter) throws IOException{
+		Path filePath = Paths.get(directory, fileName);
+		Set<String> pairs = new HashSet<String>();
+		Charset charset = Charset.forName("UTF-8");
+		BufferedReader br = Files.newBufferedReader(filePath, charset);
+		br.readLine();
+		for (String line = null; (line = br.readLine()) != null;){
+			String[] row = line.split(delimiter);
+			String gene1 = row[0];
+			String gene2 = row[1];
+			gene1 = geneIndex.get(gene1);
+			gene2 = geneIndex.get(gene2);
+			pairs.add(gene1 + "\t" + gene2);
+		}
+		br.close();
+		return pairs;
+	}
 }
