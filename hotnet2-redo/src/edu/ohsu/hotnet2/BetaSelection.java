@@ -29,9 +29,6 @@ public class BetaSelection{
 	private String directory;
 	private String betweennessScoreFile;
 	private String influenceFile;
-	private FileUtils fu;
-	private GraphUtils gu;
-	private HotNet2Matrices hn2m;
 		
 	public BetaSelection(){
 		this.currentPath = Paths.get("");
@@ -58,6 +55,9 @@ public class BetaSelection{
 	 * @throws IOException
 	 */
 	public void selectBeta(String directory, String fiFile, String betweennessScoreFile, String influenceFile) throws IOException{
+		GraphUtils gu = new GraphUtils();
+		HotNet2Matrix hn2m = new HotNet2Matrix(); 
+
 		//Create the largest component using the whole ReactomeFI network graph
 		Graph<String, String> allGenesGraph = gu.createReactomeFIGraph(directory, fiFile);
 		Graph<String, String> largestComponent = gu.createLargestComponentGraph(allGenesGraph);
@@ -82,7 +82,7 @@ public class BetaSelection{
 			System.out.println("----beta: "+ beta);
 			
 			long start1 = System.currentTimeMillis();
-			RealMatrix diffusionMatrix = hn2m.createDiffusionMatrixWrapper(largestComponent, geneSet, beta);
+			RealMatrix diffusionMatrix = hn2m.createDiffusionMatrix(largestComponent, geneSet, beta);
 			long end1 = System.currentTimeMillis();
 			System.out.println("\tDiffusion Matrix Time Taken: " + ((end1 - start1) / 1000) + " seconds");
 //			String newDirectory = directory +"/output/inflectionPoint"; 
@@ -105,6 +105,9 @@ public class BetaSelection{
 	 * @throws IOException
 	 */
 	public void selectBetaForIrefindex(String directory, String file, String betweennessScoreFile, String influenceFile) throws IOException{
+		GraphUtils gu = new GraphUtils();
+		HotNet2Matrix hn2m = new HotNet2Matrix(); 
+
 		//Create the largest component using the iRefIndex network graph
 		Graph<String, String> allGenesGraph = gu.createReactomeFIGraph(directory, file);
 		Graph<String, String> largestComponent = gu.createLargestComponentGraph(allGenesGraph);
@@ -123,7 +126,7 @@ public class BetaSelection{
 			System.out.println("----beta: "+ beta);
 			
 			long start1 = System.currentTimeMillis();
-			RealMatrix diffusionMatrix = hn2m.createDiffusionMatrixWrapper(largestComponent, geneSet, beta);
+			RealMatrix diffusionMatrix = hn2m.createDiffusionMatrix(largestComponent, geneSet, beta);
 			long end1 = System.currentTimeMillis();
 			System.out.println("\tDiffusion Matrix Time Taken: " + ((end1 - start1) / 1000) + "seconds");
 
@@ -266,6 +269,7 @@ public class BetaSelection{
 				//Store the 3 different distribution of proteins
 				influenceSet.add(tempBeta +  "\t" + tempPt + "\t" + sp + "\t" + directNeighborsNum + "\t" + secondaryNeighborsNum + "\t" + allGenesNum);
 			}
+			FileUtils fu = new FileUtils();
 			String newDirectory = directory +"/inflectionPoint/"; 
 			String newFileName = tempBeta + "_" + fileName;
 			fu.saveSetToFile(newDirectory, newFileName, influenceSet);

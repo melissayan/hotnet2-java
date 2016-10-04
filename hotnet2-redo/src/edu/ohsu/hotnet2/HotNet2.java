@@ -108,7 +108,7 @@ public class HotNet2 {
 			System.out.println("Reactome FI network");
 			double beta = Double.parseDouble(args[1]);
 			int numPermutations = 100;
-			ds.selectDeltaByCompSize(directory, beta, numPermutations);			
+			ds.selectDeltaByCompSize(directory, beta, numPermutations);	
 		}
 		if (Integer.parseInt(args[0])==5){
 			System.out.println("iRefIndex network");
