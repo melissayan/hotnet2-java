@@ -24,8 +24,15 @@ public class StatisticalSignificance{
 		
 	}
 	
-	
-	private void getStatisticalSignificance(String directory, double beta, double delta, int numPermutations) throws IOException{
+	/**
+	 * Get statistical significance of the observed subnetworks.
+	 * @param directory - Directory to store results in.
+	 * @param beta - Fraction of own heat each gene retains.
+	 * @param delta - Minimum edge weight threshold; values below edgeWeight are set to 0.
+	 * @param numPermutations - Number of permuted networks to use.
+	 * @throws IOException
+	 */
+	public void getStatisticalSignificance(String directory, double beta, double delta, int numPermutations) throws IOException{
 		HashMap<Integer, Integer> observed = obtainSubnetworkSizeToCountSumMapReal(directory, beta, delta);
 		HashMap<Integer, Integer> expected = obtainSubnetworkSizeToCountSumMapPermuted(directory, beta, delta);
 		SortedSet<Integer> sizeSet = new TreeSet<Integer>(observed.keySet());
@@ -61,6 +68,14 @@ public class StatisticalSignificance{
 		pw.close();
 	}
 	
+	/**
+	 * Obtain a HashMap of subnetwork size to the sum of size occurrences from the actual network.
+	 * @param directory - Directory of file location.
+	 * @param beta - Fraction of own heat each gene retains.
+	 * @param delta - Minimum edge weight threshold; values below edgeWeight are set to 0.
+	 * @return  a HashMap with the subnetwork size as key and the number of it's occurrences as the value.
+	 * @throws IOException
+	 */
 	private HashMap<Integer, Integer> obtainSubnetworkSizeToCountSumMapReal(String directory, double beta, double delta) throws IOException{
 		FileUtils fu = new FileUtils();
 		GraphUtils gu = new GraphUtils();
@@ -105,6 +120,14 @@ public class StatisticalSignificance{
 		return sizeToCountMap;
 	}
 	
+	/**
+	 * Obtain a HashMap of subnetwork size to the sum of size occurrences from a randomly permuted network.
+	 * @param directory - Directory of file location.
+	 * @param beta - Fraction of own heat each gene retains.
+	 * @param delta - Minimum edge weight threshold; values below edgeWeight are set to 0.
+	 * @return  a HashMap with the subnetwork size as key and the number of it's occurrences as the value.
+	 * @throws IOException
+	 */
 	//For all random networks, get a sum of greater or equal counts of subnetwork sizes
 	private HashMap<Integer, Integer> obtainSubnetworkSizeToCountSumMapPermuted(String directory, double beta, double delta) throws IOException{
 		FileUtils fu = new FileUtils();

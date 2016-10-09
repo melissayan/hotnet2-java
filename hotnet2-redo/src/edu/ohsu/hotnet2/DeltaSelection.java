@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,6 +58,7 @@ public class DeltaSelection{
 	 * @throws IOException
 	 */
 	public void selectDeltaByCompSize(String directory, double beta, int numPermutation) throws IOException{
+		System.out.println("selectDelta Function");
 		FileUtils fu = new FileUtils();
 		GraphUtils gu = new GraphUtils();
 		//Create set of genes in network and HashMap of gene index to allow gene names in graph instead of numbers
@@ -73,10 +73,11 @@ public class DeltaSelection{
 		List<Double> maxCompSize20 = new ArrayList<Double>();
 		//Use random permutated networks to obtain delta
 		String edgeListDirectory = directory + "/PythonPermutation/permutations/";
-		File folder = new File(edgeListDirectory);	
+		File folder = new File(edgeListDirectory);
 		File[] listOfFiles = folder.listFiles();
 		int iterations = 0;
 		int i = 0;
+		System.out.println("Start reading files");
 		for (File file: listOfFiles){
 			long start1 = System.currentTimeMillis();
 			String edgeListFile = file.getName();
@@ -119,6 +120,16 @@ public class DeltaSelection{
 		fu.saveListToFile(deltaCompDirectory, size20File, maxCompSize20);
 		return;
 	}
+	
+	HashMap<Integer, Double> sample(String heatScoreDirectory, String heatScoreFile, double beta, Graph<String,String> graph) throws IOException{
+		HashMap<Integer, Double> hm = new HashMap<Integer, Double>();
+		hm.put(5, 0.2739485);
+		hm.put(10, 0.2739485);
+		hm.put(15, 0.2739485);
+		hm.put(20, 0.2739485);
+		return hm;
+	}
+	
 	
 	/**
 	 * Selects the delta parameter for the iRefIndex network based on random permutation networks.
@@ -255,8 +266,8 @@ public class DeltaSelection{
 				}
 				else
 					visitedDelta.add(delta);
-				//Decrement or increment delta based on max component size
-				if (maxSubnetworkSize > size){
+				//Increment if delta too small or decrement if delta too big based on max component size
+				if (size > maxSubnetworkSize){
 					right = index;
 					index -= Math.ceil((index-left)/2);
 				} else {

@@ -23,7 +23,6 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.DoubleStream;
 
 import org.junit.*;
 
@@ -76,12 +75,14 @@ public class HotNet2 {
 		DeltaSelection ds = new DeltaSelection();
 		FileUtils fu = new FileUtils();
 		GraphUtils gu = new GraphUtils();
+		HotNet2Matrix hn2m = new HotNet2Matrix();
 		
 		if (args.length==0){
 			System.err.println("Arg[0] must indicate one of the ReactomeFI files below using a number:");
 			System.err.println("\t 1: FIsInGene_temp.txt\n\t 2: FIsInGene_031516_with_annotations.txt");
 			System.exit(0);
 		}
+		//BetaSelection
 		if (Integer.parseInt(args[0])==1){
 			String fiFile = "FIsInGene_temp.txt";
 			Path fiFilePath = Paths.get(directory, fiFile);
@@ -90,10 +91,7 @@ public class HotNet2 {
 		if (Integer.parseInt(args[0])==2){
 			String fiFile = "FIsInGene_031516_with_annotations.txt";
 			Path fiFilePath = Paths.get(directory, fiFile);
-//			bs.selectBeta(directory, fiFile, betweennessScoreFile, influenceFile);
-			Graph<String, String> allGenesGraph = gu.createReactomeFIGraph(directory, fiFile);
-			Graph<String, String> largestComponent = gu.createLargestComponentGraph(allGenesGraph);
-			System.out.println("size: " + largestComponent.getVertices().size());
+			bs.selectBeta(directory, fiFile, betweennessScoreFile, influenceFile);
 		}
 		if (Integer.parseInt(args[0])==3){
 			String fiFile = "iref_edge_list";
@@ -116,7 +114,14 @@ public class HotNet2 {
 			int numPermutations = 100;
 			ds.selectDeltaForIrefindexByCompSize(directory, beta, numPermutations);			
 		}
-		
+		//HotNet2 Algorithm
+		if (Integer.parseInt(args[0])==6){
+			System.out.println("Reactome FI network - HotNet2 Algorithm using provided beta and delta parameters");
+			String fiFile = "FIsInGene_031516_with_annotations.txt";
+			double beta = Double.parseDouble(args[1]);
+			double delta = Double.parseDouble(args[2]);
+			hn2m.testHotNet2Algorithm(directory, fiFile, heatScoreFile, beta, delta);
+		}
 		System.out.println("---------------------------- END ----------------------------");
 	}
 }
