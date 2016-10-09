@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,7 +31,7 @@ public class HotNet2Matrix {
 	}
 	
 	@Test
-	public void TestACM() throws IOException{
+	public void testACM() throws IOException{
 		FileUtils fu = new FileUtils();
 		GraphUtils gu = new GraphUtils(); 
 
@@ -51,10 +50,8 @@ public class HotNet2Matrix {
 		Set<String> geneSet = gu.getGeneGraphSet(largestComponent);
 		
 		//HotNet2 Algorithm with Apache Commons Math for all steps
-		BigDecimal tempBeta = new BigDecimal("0.5");	//get beta from user
-		double beta = tempBeta.doubleValue();
-		BigDecimal tempDelta = new BigDecimal("0.05");	//get delta from user
-		double delta = tempDelta.doubleValue();
+		double beta = 0.5;		//get beta from user
+		double delta = 0.05;	//get delta from user
 		RealMatrix F = createDiffusionMatrix(largestComponent, geneSet, beta);
 //		createTempHeatScoreFile(directory, fiFile, heatScoreFile); //REMOVE THIS and use real heat scores, this is just for testing
 		HashMap<String, Double> heatScoreMap = getHeatScoreMap(directory, heatScoreFile, geneSet);
@@ -66,7 +63,7 @@ public class HotNet2Matrix {
 	}
 
 	@Test
-	public void TestOJA() throws IOException{
+	public void testOJA() throws IOException{
 		FileUtils fu = new FileUtils();
 		GraphUtils gu = new GraphUtils();
 		Path currentPath = Paths.get(""); 
@@ -84,10 +81,8 @@ public class HotNet2Matrix {
 		Set<String> geneSet = gu.getGeneGraphSet(largestComponent);
 		
 		//HotNet2 Algorithm with ojAlgo diffusion
-		BigDecimal tempBeta = new BigDecimal("0.5");	//get beta from user
-		double beta = tempBeta.doubleValue();
-		BigDecimal tempDelta = new BigDecimal("0.05");	//get delta from user
-		double delta = tempDelta.doubleValue();
+		double beta = 0.5;		//get beta from user
+		double delta = 0.05;	//get delta from user
 		PrimitiveMatrix tempF = createDiffusionMatrixOJA(largestComponent, geneSet, beta);
 		RealMatrix F = convertOJAToACM(tempF); 
 		HashMap<String, Double> heatScoreMap = getHeatScoreMap(directory, heatScoreFile, geneSet);
@@ -97,7 +92,7 @@ public class HotNet2Matrix {
 	}
 
 	@Test
-	public void TestOjaToACM() throws IOException{
+	public void testOjaToACM() throws IOException{
 		FileUtils fu = new FileUtils();
 		GraphUtils gu = new GraphUtils();
 		Path currentPath = Paths.get(""); 
@@ -115,14 +110,53 @@ public class HotNet2Matrix {
 		Set<String> geneSet = gu.getGeneGraphSet(largestComponent);
 				
 		//HotNet2 Algorithm with ojAlgo diffusion
-		BigDecimal tempBeta = new BigDecimal("0.5");	//get beta from user
-		double beta = tempBeta.doubleValue();
+		double beta = 0.5;	//get beta from user
 
 		//Converts OJA to ACM
 		PrimitiveMatrix ojaM = createDiffusionMatrixOJA(largestComponent, geneSet, beta);
 		RealMatrix acmM = convertOJAToACM(ojaM);
 		System.out.println("ojaM: ------------\n" + ojaM);
 		System.out.println("acmM: ------------\n" + acmM);		
+	}
+
+	/**
+	 * HotNet2 Algorithm
+	 * @param directory - Directory location of network interaction file and heat score file.
+	 * @param interactionFile - Network interaction file. 
+	 * @param heatScoreFile - File name with no header containing genes and heat scores separated a space.
+	 * @param beta - Fraction of own heat each gene retains.  
+	 * @param delta - Minimum edge weight threshold; values below edgeWeight are set to 0. 
+	 * @throws IOException
+	 */
+	public void testHotNet2Algorithm(String directory, String interactionFile, String heatScoreFile, double beta, double delta) throws IOException{
+		GraphUtils gu = new GraphUtils();
+		//Create the largest component using the whole ReactomeFI network graph
+		Graph<String, String> allGenesGraph = gu.createReactomeFIGraph(directory, interactionFile);
+		Graph<String, String> largestComponent = gu.createLargestComponentGraph(allGenesGraph);
+
+		//Set of genes in the largest component, ordering determines matrix content ordering
+		Set<String> geneSet = gu.getGeneGraphSet(largestComponent);
+		//HotNet2 Algorithm
+		hotnet2Algorithm(directory, heatScoreFile, largestComponent, geneSet, beta, delta);		
+	}
+	
+	/**
+	 * Performs the HotNet2 Algorithm
+	 * @param directory - Directory where heatScoreFile is located.
+	 * @param heatScoreFile - File name containing gene and heat score separated by a space.
+	 * @param largestComponent - Graph containing only the largest component in the network.
+	 * @param geneSet - Set of genes in the graph used to determine matrix order. 
+	 * @param beta - Fraction of own heat each gene retains. 
+	 * @param delta - Minimum edge weight threshold; values below edgeWeight are set to 0.
+	 * @throws IOException
+	 */
+	private void hotnet2Algorithm(String directory, String heatScoreFile, Graph<String,String> largestComponent, Set<String> geneSet, double beta, double delta) throws IOException{
+		PrimitiveMatrix tempF = createDiffusionMatrixOJA(largestComponent, geneSet, beta);
+		RealMatrix F = convertOJAToACM(tempF); 
+		HashMap<String, Double> heatScoreMap = getHeatScoreMap(directory, heatScoreFile, geneSet);
+		RealMatrix E = createExchangedHeatMatrix(F, geneSet, heatScoreMap);
+		RealMatrix H = identifyHotSubnetworks(E, delta);		
+		obtainSubnetworkSet(H, geneSet);
 	}
 	
 	/**
@@ -134,7 +168,7 @@ public class HotNet2Matrix {
 	 */
 	public PrimitiveMatrix createDiffusionMatrixOJA(Graph<String, String> graph, Set<String> geneSet, double beta){
 		PrimitiveMatrix identityMatrix = PrimitiveMatrix.FACTORY.makeEye(geneSet.size(),geneSet.size());
-		double[][] createdAdjMatrix = createNormAdjMatrixOJA(graph, geneSet);
+		double[][] createdAdjMatrix = createNormAdjMatrix(graph, geneSet);
         PrimitiveMatrix adjMatrix = PrimitiveMatrix.FACTORY.rows(createdAdjMatrix);
 		PrimitiveMatrix m = adjMatrix.multiply(1-beta);
 		m = identityMatrix.subtract(m);
@@ -149,7 +183,7 @@ public class HotNet2Matrix {
 	 * @param geneSet - Set of genes used to determine the order and degree of adjacency matrix elements.
 	 * @return a normalized adjacency matrix.
 	 */
-	private double[][] createNormAdjMatrixOJA(Graph<String, String> graph, Set<String> geneSet) {
+	private double[][] createNormAdjMatrix(Graph<String, String> graph, Set<String> geneSet) {
 		GraphUtils gu = new GraphUtils();
 		List<String> geneList = new ArrayList<String>(geneSet);
 		List<Integer> degreeList = gu.getGeneDegreeList(graph, geneSet);		
@@ -160,7 +194,7 @@ public class HotNet2Matrix {
 				String elm1 = geneList.get(i);
 				String elm2 = geneList.get(j);				
 				if (graph.containsEdge(elm1 + "\t" + elm2) || graph.containsEdge(elm2 + "\t" + elm1)){ 	//CHECK this
-					double value = 1.0/degreeList.get(i);
+					double value = 1.0/degreeList.get(j);
 					m[i][j] = value;
 				}
 			}
@@ -193,46 +227,17 @@ public class HotNet2Matrix {
 	 * @return a diffusion matrix for HotNet2.
 	 */
 	public RealMatrix createDiffusionMatrix (Graph<String, String> graph, Set<String> geneSet, double beta){
-		RealMatrix m = createNormAdjMatrix(graph, geneSet);
-		System.out.println(m);
+		double[][] createdAdjMatrix = createNormAdjMatrix(graph, geneSet);
+		RealMatrix m = MatrixUtils.createRealMatrix(createdAdjMatrix);
 		m = m.scalarMultiply(1-beta);
-		System.out.println(m);
 		int dim = geneSet.size();
 		RealMatrix identityMatrix = MatrixUtils.createRealIdentityMatrix(dim);
-		System.out.println(identityMatrix);
 		m = identityMatrix.subtract(m);
-		System.out.println(m);
-		
 		m = MatrixUtils.inverse(m);
 		m = m.scalarMultiply(beta);
 		return m;
 	}
 	
-	/**
-	 * Creates a normalized adjacency matrix.
-	 * @param graph - Graph used to generate adjacency matrix.
-	 * @param geneSet - Set of genes used to determine the order and degree of adjacency matrix elements.
-	 * @return a normalized adjacency matrix.
-	 */
-	private RealMatrix createNormAdjMatrix(Graph<String, String> graph, Set<String> geneSet) {
-		GraphUtils gu = new GraphUtils();
-		List<String> geneList = new ArrayList<String>(geneSet);
-		List<Integer> degreeList = gu.getGeneDegreeList(graph, geneSet);		
-		int dim = geneList.size();
-		RealMatrix m = MatrixUtils.createRealMatrix(dim, dim);
-		for (int i=0; i<dim; i++){
-			for(int j=0; j<dim; j++){
-				String elm1 = geneList.get(i);
-				String elm2 = geneList.get(j);				
-				if (graph.containsEdge(elm1 + "\t" + elm2) || graph.containsEdge(elm2 + "\t" + elm1)){ 	//CHECK this
-					double value = 1.0/degreeList.get(i);
-					m.setEntry(i,j,value);
-				}
-			}
-		}
-		return m; 
-	}
-
 	/**
 	 * Creates Exchanged Heat Matrix, E = F * diagonal heat Matrix.
 	 * @param diffusionMatrix - Diffusion matrix created by createDiffusionMatrix().
