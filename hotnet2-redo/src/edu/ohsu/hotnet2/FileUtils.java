@@ -31,7 +31,6 @@ public class FileUtils{
 	public void testFilesForPY() throws IOException {
 		Path currentPath = Paths.get(""); 
 		String directory = currentPath.toAbsolutePath().toString();
-		String largestCompFile = "largestComponentPairs.txt";
 		String geneIndexFile = "geneIndexReactome.txt";
 		String edgeListFile = "edgeListReactome.txt";
 
@@ -40,7 +39,7 @@ public class FileUtils{
 		Graph<String, String> allGenesGraph = gu.createReactomeFIGraph(directory, fiFile);
 		Graph<String, String> largestComponent = gu.createLargestComponentGraph(allGenesGraph);
 		
-		convertFileForPythonHotNet2(directory, largestCompFile, geneIndexFile, edgeListFile);
+		convertFileForPythonHotNet2(directory, fiFile, geneIndexFile, edgeListFile);
 	}
 	
 	@Test
@@ -396,8 +395,8 @@ public class FileUtils{
 	 * @param edgeListFile - File name where the gene pairs will be saved.
 	 * @throws IOException
 	 */
-	public void convertFileForPythonHotNet2(String directory, String largestCompFile, String geneIndexFile, String edgeListFile) throws IOException{
-		Path largeCompFilePath = Paths.get(directory+"/output/", largestCompFile);
+	public void convertFileForPythonHotNet2(String directory, String fiFile, String geneIndexFile, String edgeListFile) throws IOException{
+		Path largeCompFilePath = Paths.get(directory, fiFile);
 
 		//Get all genes and all interaction pairs from largest Component file
 		Set<String> allGenes = getAllGenes(largeCompFilePath);

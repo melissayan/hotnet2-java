@@ -86,14 +86,24 @@ public class HotNet2 {
 		if (Integer.parseInt(args[0])==1){
 			String fiFile = "FIsInGene_temp.txt";
 			Path fiFilePath = Paths.get(directory, fiFile);
-			bs.selectBeta(directory, fiFile, betweennessScoreFile, influenceFile);
+			Boolean onlyTP53 = false; 
+			bs.selectBeta(directory, fiFile, betweennessScoreFile, influenceFile, onlyTP53);
 		}
 		if (Integer.parseInt(args[0])==2){
+			System.out.println("Beta Selection using Reactome FI network");
 			String fiFile = "FIsInGene_031516_with_annotations.txt";
 			Path fiFilePath = Paths.get(directory, fiFile);
-			bs.selectBeta(directory, fiFile, betweennessScoreFile, influenceFile);
+			if (args[1] == "onlyTP53"){
+				Boolean onlyTP53 = true;
+				bs.selectBeta(directory, fiFile, betweennessScoreFile, influenceFile, onlyTP53);
+			}
+			else {
+				Boolean onlyTP53 = false;
+				bs.selectBeta(directory, fiFile, betweennessScoreFile, influenceFile, onlyTP53);
+			}
 		}
 		if (Integer.parseInt(args[0])==3){
+			System.out.println("Beta Selection using iRefIndex network");
 			String fiFile = "iref_edge_list";
 //			String fiFile = "iref_edge_list_temp";
 			fiFile = fu.modifyEdgeFileToTabDelimited(directory, fiFile, false, " ");
@@ -105,6 +115,7 @@ public class HotNet2 {
 		if (Integer.parseInt(args[0])==4){
 			System.out.println("Reactome FI network");
 			double beta = Double.parseDouble(args[1]);
+			System.out.println("beta = " + beta);
 			int numPermutations = 100;
 			ds.selectDeltaByCompSize(directory, beta, numPermutations);	
 		}
@@ -121,6 +132,11 @@ public class HotNet2 {
 			double beta = Double.parseDouble(args[1]);
 			double delta = Double.parseDouble(args[2]);
 			hn2m.testHotNet2Algorithm(directory, fiFile, heatScoreFile, beta, delta);
+		}
+		//Prepare Files for Python version of HotNet2
+		if (Integer.parseInt(args[0])==7){
+			System.out.println("Preparing Reactome FI network edgelist and gene index for Python version of HotNet2");
+			fu.testFilesForPY();
 		}
 		System.out.println("---------------------------- END ----------------------------");
 	}
