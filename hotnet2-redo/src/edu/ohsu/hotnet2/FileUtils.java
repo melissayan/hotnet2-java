@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.junit.Test;
@@ -118,8 +119,8 @@ public class FileUtils{
 	 * @return a ordered set of file line contents.
 	 * @throws IOException
 	 */
-	public Set<String> getFileContents (String directory, String fileName) throws IOException{
-		Set<String> contents = new TreeSet<String>();
+	public SortedSet<String> getFileContents (String directory, String fileName) throws IOException{
+		SortedSet<String> contents = new TreeSet<String>();
 		Path path = Paths.get(directory, fileName);
 		Charset charset = Charset.forName("UTF-8");
 		BufferedReader br = Files.newBufferedReader(path, charset);
@@ -240,8 +241,8 @@ public class FileUtils{
 	 * @throws IOException
 	 */
 	public void compareFiles (String directory, String file1, String file2) throws IOException{
-		Set<String> content1 = getFileContents(directory, file1);
-		Set<String> content2 = getFileContents(directory, file2);
+		SortedSet<String> content1 = getFileContents(directory, file1);
+		SortedSet<String> content2 = getFileContents(directory, file2);
 		if (content1.equals(content2) == true)
 			System.out.println(file1 + " and " + file2 + "have the same contents");
 		else{
@@ -406,7 +407,7 @@ public class FileUtils{
 		GraphUtils gu = new GraphUtils();
 		Graph<String, String> allGenesGraph = gu.createGraph(allGenes, allPairs);
 		Graph<String, String> largestComponent = gu.createLargestComponentGraph(allGenesGraph);
-		Set<String> geneSet = gu.getGeneGraphSet(largestComponent);
+		SortedSet<String> geneSet = gu.getGeneGraphSet(largestComponent);
 		Set<String> genePairs = gu.getPairs(largestComponent);
 		
 		//Create gene index file and a hash map with the gene and index for use in creating the edge list file
@@ -449,8 +450,8 @@ public class FileUtils{
 	 * @return a set of genes obtained from the provided file. 
 	 * @throws IOException
 	 */
-	public Set<String> getAllGenesPY(String directory, String fileName, String delimiter) throws IOException{
-		Set<String> genes = new TreeSet<String>();
+	public SortedSet<String> getAllGenesPY(String directory, String fileName, String delimiter) throws IOException{
+		SortedSet<String> genes = new TreeSet<String>();
 		Path filePath = Paths.get(directory, fileName);
 		Charset charset = Charset.forName("UTF-8");
 		BufferedReader br = Files.newBufferedReader(filePath, charset);	

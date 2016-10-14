@@ -83,7 +83,7 @@ public class StatisticalSignificance{
 		//Create set of genes in network and HashMap of gene index to allow gene names in graph instead of numbers
 		String geneIndexDirectory = directory;
 		String geneIndexFile = "geneIndexReactome.txt";
-		Set<String> genes = fu.getAllGenesPY(geneIndexDirectory, geneIndexFile, "\t");
+		SortedSet<String> genes = fu.getAllGenesPY(geneIndexDirectory, geneIndexFile, "\t");
 		HashMap<String, String> geneIndexMap = fu.getGeneIndexNamePY(geneIndexDirectory, geneIndexFile, "\t");
 		//Read in all permutation files within a directory to get subnetwork size sum count
 		HashMap<Integer, Integer> sizeToCountMap = new HashMap<Integer, Integer>();
@@ -136,7 +136,7 @@ public class StatisticalSignificance{
 		//Create set of genes in network and HashMap of gene index to allow gene names in graph instead of numbers
 		String geneIndexDirectory = directory + "/PythonPermutation/";
 		String geneIndexFile = "geneIndexReactome.txt";
-		Set<String> genes = fu.getAllGenesPY(geneIndexDirectory, geneIndexFile, "\t");
+		SortedSet<String> genes = fu.getAllGenesPY(geneIndexDirectory, geneIndexFile, "\t");
 		HashMap<String, String> geneIndexMap = fu.getGeneIndexNamePY(geneIndexDirectory, geneIndexFile, "\t");
 		//Read in all permutation files within a directory to get subnetwork size sum count
 		HashMap<Integer, Integer> sizeToCountMap = new HashMap<Integer, Integer>();
@@ -189,7 +189,7 @@ public class StatisticalSignificance{
 		FileUtils fu = new FileUtils();
 		GraphUtils gu = new GraphUtils();
 		HotNet2Matrix hn2m = new HotNet2Matrix();
-		Set<String> geneSet = gu.getGeneGraphSet(graph);
+		SortedSet<String> geneSet = gu.getGeneGraphSet(graph);
 		PrimitiveMatrix tempF = hn2m.createDiffusionMatrixOJA(graph, geneSet, beta);
 		RealMatrix F = hn2m.convertOJAToACM(tempF);	
 		RealMatrix E = hn2m.createExchangedHeatMatrix(heatScoreDirectory, heatScoreFile, F, geneSet);
