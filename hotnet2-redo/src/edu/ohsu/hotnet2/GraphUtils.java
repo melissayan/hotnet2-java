@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.commons.math3.linear.RealMatrix;
@@ -198,8 +199,8 @@ public class GraphUtils{
 	 * @param graph	- Graph used to obtain genes from. 
 	 * @return a ordered set of genes from the graph.
 	 */
-	public Set<String> getGeneGraphSet (Graph<String, String> graph){
-		Set<String> geneSet = new TreeSet<String>();
+	public SortedSet<String> getGeneGraphSet (Graph<String, String> graph){
+		SortedSet<String> geneSet = new TreeSet<String>();
 		for (String vertex: graph.getVertices())
 			geneSet.add(vertex);
 		return geneSet;

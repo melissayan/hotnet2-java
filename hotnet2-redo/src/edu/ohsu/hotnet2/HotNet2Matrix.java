@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.SortedSet;
 
 import org.apache.commons.math3.linear.DefaultRealMatrixChangingVisitor;
 import org.apache.commons.math3.linear.MatrixUtils;
@@ -47,7 +48,7 @@ public class HotNet2Matrix {
 		System.out.println("size: " + largestComponent.getVertices().size());
 
 		//Set of genes in the largest component, ordering determines matrix content ordering
-		Set<String> geneSet = gu.getGeneGraphSet(largestComponent);
+		SortedSet<String> geneSet = gu.getGeneGraphSet(largestComponent);
 		
 		//HotNet2 Algorithm with Apache Commons Math for all steps
 		double beta = 0.5;		//get beta from user
@@ -78,7 +79,7 @@ public class HotNet2Matrix {
 		System.out.println("size: " + largestComponent.getVertices().size());
 
 		//Set of genes in the largest component, ordering determines matrix content ordering
-		Set<String> geneSet = gu.getGeneGraphSet(largestComponent);
+		SortedSet<String> geneSet = gu.getGeneGraphSet(largestComponent);
 		
 		//HotNet2 Algorithm with ojAlgo diffusion
 		double beta = 0.5;		//get beta from user
@@ -107,7 +108,7 @@ public class HotNet2Matrix {
 		System.out.println("size: " + largestComponent.getVertices().size());
 
 		//Set of genes in the largest component, ordering determines matrix content ordering
-		Set<String> geneSet = gu.getGeneGraphSet(largestComponent);
+		SortedSet<String> geneSet = gu.getGeneGraphSet(largestComponent);
 				
 		//HotNet2 Algorithm with ojAlgo diffusion
 		double beta = 0.5;	//get beta from user
@@ -135,7 +136,7 @@ public class HotNet2Matrix {
 		Graph<String, String> largestComponent = gu.createLargestComponentGraph(allGenesGraph);
 
 		//Set of genes in the largest component, ordering determines matrix content ordering
-		Set<String> geneSet = gu.getGeneGraphSet(largestComponent);
+		SortedSet<String> geneSet = gu.getGeneGraphSet(largestComponent);
 		//HotNet2 Algorithm
 		hotnet2Algorithm(directory, heatScoreFile, largestComponent, geneSet, beta, delta);		
 	}
@@ -316,7 +317,7 @@ public class HotNet2Matrix {
 		FileUtils fu = new FileUtils();
 		GraphUtils gu = new GraphUtils();
 		String geneMissingHeatFile = "geneMissingHeat.txt";
-		Set<String> geneSet = gu.getGeneGraphSet(graph);
+		SortedSet<String> geneSet = gu.getGeneGraphSet(graph);
 		Set<String> geneMissingHeat = getMissingHeatScoreGenes(directory, heatScoreFile, geneSet);
 		fu.saveSetToFile(directory+"/output/", geneMissingHeatFile, geneMissingHeat);
 	}

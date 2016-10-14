@@ -121,16 +121,6 @@ public class DeltaSelection{
 		return;
 	}
 	
-	HashMap<Integer, Double> sample(String heatScoreDirectory, String heatScoreFile, double beta, Graph<String,String> graph) throws IOException{
-		HashMap<Integer, Double> hm = new HashMap<Integer, Double>();
-		hm.put(5, 0.2739485);
-		hm.put(10, 0.2739485);
-		hm.put(15, 0.2739485);
-		hm.put(20, 0.2739485);
-		return hm;
-	}
-	
-	
 	/**
 	 * Selects the delta parameter for the iRefIndex network based on random permutation networks.
 	 * <p>
@@ -146,7 +136,7 @@ public class DeltaSelection{
 		//Create set of genes in network and HashMap of gene index to allow gene names in graph instead of numbers
 		String geneIndexDirectory = directory + "/PythonPermutation_Irefindex/";
 		String geneIndexFile = "iref_index_genes";
-		Set<String> genes = fu.getAllGenesPY(geneIndexDirectory, geneIndexFile, " ");
+		SortedSet<String> genes = fu.getAllGenesPY(geneIndexDirectory, geneIndexFile, " ");
 		HashMap<String, String> geneIndexMap = fu.getGeneIndexNamePY(geneIndexDirectory, geneIndexFile, " ");
 		//List for storing delta values for the maximum component size 10
 		List<Double> maxCompSize10 = new ArrayList<Double>();
@@ -167,8 +157,8 @@ public class DeltaSelection{
 			WeakComponentClusterer<String, String> wcc = new WeakComponentClusterer<String, String>();		
 			Set<Set<String>> components = wcc.transform(largestComponent);
 			if (components.size() != 1){
-				//throw new IllegalArgumentException("Provided permuted graph " + edgeListFile + " is not connected, it has " + components + " components.");
-				System.out.println("Provided permuted graph " + edgeListFile + " is not connected, it has " + components + " components.");
+				//throw new IllegalArgumentException("Provided permuted graph " + edgeListFile + " is not connected, it has " + components.size() + " components.");
+				System.out.println("Provided permuted graph " + edgeListFile + " is not connected, it has " + components.size() + " components.");
 			}
 			//Store smallest delta value corresponding with maximum component size 10
 			HashMap<Integer, Double> compSizeToDeltaMap = getByCompSizeMapIrefindex(heatScoreDirectory, heatScoreFile, beta, largestComponent);
@@ -199,7 +189,7 @@ public class DeltaSelection{
 	private HashMap<Integer, Double> getByCompSizeMap(String heatScoreDirectory, String heatScoreFile, double beta, Graph<String,String> graph) throws IOException{
 		GraphUtils gu = new GraphUtils();
 		HotNet2Matrix hn2m = new HotNet2Matrix(); 
-		Set<String> geneSet = gu.getGeneGraphSet(graph);
+		SortedSet<String> geneSet = gu.getGeneGraphSet(graph);
 		PrimitiveMatrix tempF = hn2m.createDiffusionMatrixOJA(graph, geneSet, beta);
 		RealMatrix F = hn2m.convertOJAToACM(tempF);	
 		RealMatrix ExchangedHeatMatrix = hn2m.createExchangedHeatMatrix(heatScoreDirectory, heatScoreFile, F, geneSet);
@@ -222,9 +212,10 @@ public class DeltaSelection{
 	 * @throws IOException
 	 */
 	private HashMap<Integer, Double> getByCompSizeMapIrefindex(String heatScoreDirectory, String heatScoreFile, double beta, Graph<String,String> graph) throws IOException{
+		System.out.println("Matrix Calc");
 		GraphUtils gu = new GraphUtils();
 		HotNet2Matrix hn2m = new HotNet2Matrix(); 
-		Set<String> geneSet = gu.getGeneGraphSet(graph);
+		SortedSet<String> geneSet = gu.getGeneGraphSet(graph);
 		PrimitiveMatrix tempF = hn2m.createDiffusionMatrixOJA(graph, geneSet, beta);
 		RealMatrix F = hn2m.convertOJAToACM(tempF);
 		RealMatrix ExchangedHeatMatrix = hn2m.createExchangedHeatMatrix(heatScoreDirectory, heatScoreFile, F, geneSet);
@@ -331,7 +322,7 @@ public class DeltaSelection{
 		String fiFile = "FIsInGene_031516_with_annotations.txt";
 		Graph<String, String> allGenesGraph = gu.createReactomeFIGraph(directory, fiFile);
 		Graph<String, String> graph = gu.createLargestComponentGraph(allGenesGraph);
-		Set<String> geneSet = gu.getGeneGraphSet(graph);
+		SortedSet<String> geneSet = gu.getGeneGraphSet(graph);
 		//Lists for storing delta values for different maximum component sizes
 		List<Double> maxCompSize5 = new ArrayList<Double>();
 		List<Double> maxCompSize10 = new ArrayList<Double>();

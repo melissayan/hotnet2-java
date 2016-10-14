@@ -16,10 +16,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.commons.math3.linear.RealMatrix;
 import org.junit.Test;
+import org.ojalgo.matrix.PrimitiveMatrix;
 
 import edu.uci.ics.jung.algorithms.importance.BetweennessCentrality;
 import edu.uci.ics.jung.graph.Graph;
@@ -41,7 +43,8 @@ public class BetaSelection{
 	public void testBetaSelection() throws IOException{
 		String fiFile = "FIsInGene_031516_with_annotations.txt";
 		Path fiFilePath = Paths.get(directory, fiFile);
-		selectBeta(directory, fiFile, betweennessScoreFile, influenceFile);
+		Boolean onlyTP53 = false; 
+		selectBeta(directory, fiFile, betweennessScoreFile, influenceFile, onlyTP53);
 	}
 	
 	/**
@@ -54,45 +57,62 @@ public class BetaSelection{
 	 * @param influenceFile - File name for saving influence gene counts.
 	 * @throws IOException
 	 */
-	public void selectBeta(String directory, String fiFile, String betweennessScoreFile, String influenceFile) throws IOException{
+	public void selectBeta(String directory, String fiFile, String betweennessScoreFile, String influenceFile, boolean onlyTP53) throws IOException{
 		GraphUtils gu = new GraphUtils();
-		HotNet2Matrix hn2m = new HotNet2Matrix(); 
-
+		 
 		//Create the largest component using the whole ReactomeFI network graph
 		Graph<String, String> allGenesGraph = gu.createReactomeFIGraph(directory, fiFile);
 		Graph<String, String> largestComponent = gu.createLargestComponentGraph(allGenesGraph);
 
-		//Calculate and save betweenness centrality for all genes in largest component
-		saveBetweennessCentrality(directory, betweennessScoreFile, largestComponent);
 		
-		//Get 5 source proteins from betweennness centrality scores
-		String newDirectory = directory + "/output/"; 
-		List<String> sourceProteins = getSourceProteins(newDirectory, betweennessScoreFile);
+		if (onlyTP53 == true){
+			//Get TP53 as a source protein
+			List<String> sourceProteins =  new ArrayList<String>();
+			sourceProteins.add("TP53");
+			String newDirectory = directory + "/output/";
+			generateRangeBeta(newDirectory, influenceFile, largestComponent, sourceProteins);
+		}
+		else {
+			//Calculate and save betweenness centrality for all genes in largest component
+			saveBetweennessCentrality(directory, betweennessScoreFile, largestComponent);
 
-/*		//Get TP53 as a source protein
-		List<String> sourceProteins =  new ArrayList<String>();
-		sourceProteins.add("TP53");
-*/		
+			//Get 5 source proteins from betweennness centrality scores
+			String newDirectory = directory + "/output/"; 
+			List<String> sourceProteins = getSourceProteins(newDirectory, betweennessScoreFile);
+			generateRangeBeta(newDirectory, influenceFile, largestComponent, sourceProteins);
+		}
+	}
+	
+	/**
+	 * Generates 20 diffusion matrices with different beta parameters ranging from 0.05 to 1.00.
+	 * @param directory - Directory of Reactome FI network file and place to save files.
+	 * @param influenceFile - File name for saving influence gene counts.
+	 * @param largestComponent - Largest component in graph. 
+	 * @param influenceFile - File name for saving influence gene counts.
+	 * @throws IOException
+	 */
+	private void generateRangeBeta(String directory, String influenceFile, Graph<String, String> largestComponent, List<String> sourceProteins) throws IOException{
+		GraphUtils gu = new GraphUtils();
+		HotNet2Matrix hn2m = new HotNet2Matrix();
 		//Generate 20 diffusion matrices with different beta ranging from: 0.05, 0.10, 0.15,..., 1.00
-		Set<String> geneSet = gu.getGeneGraphSet(largestComponent);
+		SortedSet<String> geneSet = gu.getGeneGraphSet(largestComponent);
 		for(int i=1; i<21; i++){
 			BigDecimal tempBeta = new BigDecimal("0.05");
 			tempBeta = tempBeta.multiply(new BigDecimal(i));
 			double beta = tempBeta.doubleValue();
 			System.out.println("----beta: "+ beta);
-			
 			long start1 = System.currentTimeMillis();
-			RealMatrix diffusionMatrix = hn2m.createDiffusionMatrix(largestComponent, geneSet, beta);
+			PrimitiveMatrix diffusionMatrix = hn2m.createDiffusionMatrixOJA(largestComponent, geneSet, beta);
 			long end1 = System.currentTimeMillis();
 			System.out.println("\tDiffusion Matrix Time Taken: " + ((end1 - start1) / 1000) + " seconds");
 //			String newDirectory = directory +"/output/inflectionPoint"; 
 //			String newFileName = tempBeta + "_diffusion.txt";
 //			saveMatrix(newDirectory, newFileName, diffusionMatrix);
 
-			saveInfluenceGeneCountRange(newDirectory, influenceFile, largestComponent, sourceProteins, diffusionMatrix, geneSet, tempBeta);			
-		}
-	
+			saveInfluenceGeneCountRange(directory, influenceFile, largestComponent, sourceProteins, diffusionMatrix, geneSet, tempBeta);			
+		}		
 	}
+	
 	
 	/**
 	 * Selects the beta parameter for the iRefIndex network.
@@ -118,7 +138,7 @@ public class BetaSelection{
 //		sourceProteins.add("6911"); //source protein for iref_edge_list_temp
 
 		//Generate diffusion matrix with beta: 0.45
-		Set<String> geneSet = gu.getGeneGraphSet(largestComponent);
+		SortedSet<String> geneSet = gu.getGeneGraphSet(largestComponent);
 		for(int i=1; i<2; i++){
 			BigDecimal tempBeta = new BigDecimal("0.45");
 			tempBeta = tempBeta.multiply(new BigDecimal(i));
@@ -126,7 +146,7 @@ public class BetaSelection{
 			System.out.println("----beta: "+ beta);
 			
 			long start1 = System.currentTimeMillis();
-			RealMatrix diffusionMatrix = hn2m.createDiffusionMatrix(largestComponent, geneSet, beta);
+			PrimitiveMatrix diffusionMatrix = hn2m.createDiffusionMatrixOJA(largestComponent, geneSet, beta);
 			long end1 = System.currentTimeMillis();
 			System.out.println("\tDiffusion Matrix Time Taken: " + ((end1 - start1) / 1000) + "seconds");
 
@@ -238,7 +258,7 @@ public class BetaSelection{
 	 * @param beta - parameter that determines the fraction of own heat each gene retains.
 	 * @throws IOException 
 	 */
-	private void saveInfluenceGeneCountRange(String directory, String fileName, Graph<String,String> graph, List<String> sourceProteins, RealMatrix diffusionMatrix, Set<String> geneSet, BigDecimal tempBeta) throws IOException{
+	private void saveInfluenceGeneCountRange(String directory, String fileName, Graph<String,String> graph, List<String> sourceProteins, PrimitiveMatrix diffusionMatrix, Set<String> geneSet, BigDecimal tempBeta) throws IOException{
 		Set<String> influenceSet = new TreeSet<String>();
 		for (int i=0; i<1001; i++){
 			BigDecimal tempPt = new BigDecimal("0.0001");
@@ -248,7 +268,6 @@ public class BetaSelection{
 			int secondaryNeighborsNum = 0;
 			int allGenesNum = 0;
 			
-			System.out.println(sourceProteins + "\n" + graph + "\n" + diffusionMatrix + "\n" + directory + "\n" + fileName + "\n---------");
 			for(String sp: sourceProteins){
 				//Obtain the source protein's direct neighbors, secondary neighbors, and all proteins in the network 
 				Set<String> directNeighbors = new TreeSet<String>();
@@ -285,12 +304,12 @@ public class BetaSelection{
 	 * @param thetaInfluence - Parameter used to determine number of genes with at least this value.
 	 * @return the number of genes greater than or equal to the theta influence.
 	 */
-	private int calculateInfluenceQuantity(RealMatrix diffusionMatrix, Set<String> geneSet, Set<String> specificGeneSet, String sourceProtein, double thetaInfluence){
+	private int calculateInfluenceQuantity(PrimitiveMatrix diffusionMatrix, Set<String> geneSet, Set<String> specificGeneSet, String sourceProtein, double thetaInfluence){
 		int quantity = 0; 
 		List<Integer> proteinList = getSpecificGeneIndexInSet(geneSet, specificGeneSet, sourceProtein);
 		for (Integer p: proteinList){
 			if (proteinList.get(0) != p){
-				if (thetaInfluence <= diffusionMatrix.getEntry(proteinList.get(0),p))
+				if (thetaInfluence <= diffusionMatrix.get(proteinList.get(0),p))
 					quantity+=1;
 			}
 		}	
