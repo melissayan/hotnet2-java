@@ -191,10 +191,10 @@ public class FileUtils{
 	}
 	
 	/**
-	 * Saves a list into a file. 
+	 * Saves a list of doubles into a file. 
 	 * @param directory - Directory to save the file in.
 	 * @param fileName - Name of file to save list in.
-	 * @param maxCompSizeList - List to be saved.
+	 * @param saveList - List to be saved.
 	 * @throws IOException
 	 */
 	public void saveListToFile(String directory, String fileName, List<Double> saveList) throws IOException{
@@ -497,12 +497,13 @@ public class FileUtils{
 	 * @return a set containing all interaction pairs within the provided file.
 	 * @throws IOException
 	 */
-	public Set<String> getAllInteractionPairsPY(String directory, String fileName, HashMap<String,String> geneIndex, String delimiter) throws IOException{
+	public Set<String> getAllInteractionPairsPY(String directory, String fileName, HashMap<String,String> geneIndex, Boolean header, String delimiter) throws IOException{
 		Path filePath = Paths.get(directory, fileName);
 		Set<String> pairs = new HashSet<String>();
 		Charset charset = Charset.forName("UTF-8");
 		BufferedReader br = Files.newBufferedReader(filePath, charset);
-		br.readLine();
+		if (header == true)
+			br.readLine(); //CHECK. if files have 1 line header, skip it  
 		for (String line = null; (line = br.readLine()) != null;){
 			String[] row = line.split(delimiter);
 			String gene1 = row[0];

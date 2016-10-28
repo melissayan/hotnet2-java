@@ -19,10 +19,15 @@ import java.util.SortedSet;
 import org.apache.commons.math3.linear.DefaultRealMatrixChangingVisitor;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.jgrapht.alg.StrongConnectivityInspector;
+import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
 import org.junit.Test;
 import org.ojalgo.matrix.PrimitiveMatrix;
 
 import edu.uci.ics.jung.algorithms.cluster.WeakComponentClusterer;
+import edu.uci.ics.jung.graph.DirectedGraph;
+import edu.uci.ics.jung.graph.DirectedSparseGraph;
 import edu.uci.ics.jung.graph.Graph;
 
 public class HotNet2Matrix {
@@ -151,7 +156,7 @@ public class HotNet2Matrix {
 	 * @param delta - Minimum edge weight threshold; values below edgeWeight are set to 0.
 	 * @throws IOException
 	 */
-	private void hotnet2Algorithm(String directory, String heatScoreFile, Graph<String,String> largestComponent, Set<String> geneSet, double beta, double delta) throws IOException{
+	private void hotnet2Algorithm(String directory, String heatScoreFile, Graph<String,String> largestComponent, SortedSet<String> geneSet, double beta, double delta) throws IOException{
 		PrimitiveMatrix tempF = createDiffusionMatrixOJA(largestComponent, geneSet, beta);
 		RealMatrix F = convertOJAToACM(tempF); 
 		HashMap<String, Double> heatScoreMap = getHeatScoreMap(directory, heatScoreFile, geneSet);
@@ -187,7 +192,7 @@ public class HotNet2Matrix {
 	private double[][] createNormAdjMatrix(Graph<String, String> graph, Set<String> geneSet) {
 		GraphUtils gu = new GraphUtils();
 		List<String> geneList = new ArrayList<String>(geneSet);
-		List<Integer> degreeList = gu.getGeneDegreeList(graph, geneSet);		
+		List<Integer> degreeList = gu.getGeneDegreeList(graph, geneSet);
 		int dim = geneList.size();
 		double[][] m = new double [dim][dim];
 		for (int i=0; i<dim; i++){
@@ -303,6 +308,14 @@ public class HotNet2Matrix {
 			}
 		}
 		br.close();
+		
+		Set<String> geneWithScore = new HashSet<String>(geneScores.keySet());
+		for (String gene: geneSet){
+			if(!geneWithScore.contains(gene)){
+				geneScores.put(gene, 0.0);
+			}
+		}	
+		
 		return geneScores;
 	}
 	
@@ -377,25 +390,53 @@ public class HotNet2Matrix {
 	 * @param edgeWeight - Minimum edge weight threshold; values below edgeWeight are set to 0. 
 	 * @return a matrix with values below edgeWeight removed
 	 */
-	public RealMatrix identifyHotSubnetworks(RealMatrix exchangedHeatMatrix, double edgeWeight){
+	public RealMatrix identifyHotSubnetworks(RealMatrix Matrix, double edgeWeight){
 		final double weight= edgeWeight;
+		RealMatrix exchangedHeatMatrix = Matrix.copy();
 		exchangedHeatMatrix.walkInOptimizedOrder(new DefaultRealMatrixChangingVisitor() {
 			public double visit(int row, int column, double value){	
-				if (value <= weight)
+				if (value < weight)
 					return 0;	
 				return value; 
 			}
 		});	
 		return exchangedHeatMatrix;
 	}
-
+	
+	/**
+	 * Obtain max subnetwork size for the provided edge weight. 
+	 * @param exchangedHeatMatrix - Exchanged heat matrix to extract subnetworks from.
+	 * @param edgeWeight - Edge weight value is used to remove edges less than this value to create connected components.
+	 * @return  the size of the largest component.
+	 */
+	public int obtainMaxSubnetworkSizeForEdgeWeight (RealMatrix exchangedHeatMatrix, double edgeWeight){
+		DefaultDirectedGraph<Integer, DefaultEdge> graph = new DefaultDirectedGraph<Integer, DefaultEdge>(DefaultEdge.class);
+		int size = exchangedHeatMatrix.getRowDimension();
+		for (int i = 0; i < size; i++) {
+			graph.addVertex(i);
+			for (int j = 0; j < size; j++) {
+				graph.addVertex(j);
+				if (i != j && exchangedHeatMatrix.getEntry(i, j) >= edgeWeight)
+						graph.addEdge(i,j);
+			}
+		}
+		StrongConnectivityInspector sci = new StrongConnectivityInspector(graph);
+		List<Set<Integer>> components = sci.stronglyConnectedSets();
+		int subnetworkSize = 0;
+		for(Set<Integer> c: components){
+			if(c.size() > subnetworkSize)
+				subnetworkSize = c.size();
+		}
+		return subnetworkSize;
+	}
+	
 	/**
 	 * Obtains a set of subnetwork genes.
 	 * @param matrix - Matrix to extract subnetworks from.
 	 * @param geneSet - Set of genes used to determine matrix order.
 	 * @return a set containing sets of genes that form subnetworks.
 	 */
-	public Set<Set<String>> obtainSubnetworkSet(RealMatrix matrix, Set<String> geneSet){
+	public Set<Set<String>> obtainSubnetworkSet(RealMatrix matrix, SortedSet<String> geneSet){
 		GraphUtils gu = new GraphUtils();
 		Graph<String, String> graph = gu.covertMatrixToDirectedGraph(matrix, geneSet);
 		WeakComponentClusterer<String, String> wcc = new WeakComponentClusterer<String, String>();		

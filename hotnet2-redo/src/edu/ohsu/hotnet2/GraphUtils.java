@@ -227,7 +227,7 @@ public class GraphUtils{
 	 * @param geneSet - Set of genes used to determine matrix order.
 	 * @return a directed graph generated from the matrix
 	 */
-	public Graph<String, String> covertMatrixToDirectedGraph (RealMatrix matrix, Set<String> geneSet){
+	public Graph<String, String> covertMatrixToDirectedGraph (RealMatrix matrix, SortedSet<String> geneSet){
 		List<String> geneList = new ArrayList<String>(geneSet);
 		Set<String> genes = new TreeSet<String>();
 		Set<String> pairs = new TreeSet<String>();
@@ -235,15 +235,15 @@ public class GraphUtils{
 		for (int i=0; i<dim; i++){
 			for (int j=0; j<dim; j++){
 				double value = matrix.getEntry(i, j);
-				if (value != 0){
-					String gene1 = geneList.get(i);
-					String gene2 = geneList.get(j);
+				if (value > 0){
+					String gene1 = Integer.toString(i);
+					String gene2 = Integer.toString(j);
 					genes.add(gene1);
 					genes.add(gene2);
 					pairs.add(gene1 + "\t" + gene2);
 				}
 			}
-		}
+		}	
 		Graph<String, String> graph = createGraphDirected(genes, pairs); 
 		return graph; 
 	}
