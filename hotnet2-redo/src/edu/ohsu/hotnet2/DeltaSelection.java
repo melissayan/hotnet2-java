@@ -38,7 +38,7 @@ public class DeltaSelection{
 	public void testReactomeDelta() throws IOException{
 		double beta = 0.25; //get beta from user --- should be what was obtained from BetaSelection for Reactome FI (0.25 or 0.30)
 		int numPermutation = 100;
-		selectDeltaByCompSize(directory, beta, numPermutation);
+		selectDeltaByCompSize(directory+"/PythonPermutation/", beta, numPermutation);
 	//	selectDeltaByHeatScore (directory, beta, numPermutation);
 	}
 	
@@ -47,6 +47,97 @@ public class DeltaSelection{
 		double beta = 0.45;
 		int numPermutation = 2; 
 		selectDeltaForIrefindexByCompSize(directory, beta, numPermutation);
+	}
+	
+	@Test
+	public void testPrototypeDelta() throws IOException{
+		double beta = 0.25;
+		int numPermutation = 100;
+		String dir =  directory+"/prototype/";
+		String indexFile = "prototype_index_genes";
+		String heatScoreFile = "prototype_heatScore";
+				
+		selectDeltaForPrototypeByCompSize(dir, indexFile, heatScoreFile, beta, numPermutation);
+	}
+	
+	@Test
+	public void testSmallDelta() throws IOException{
+		double beta = 0.25;
+		int numPermutation = 1;
+		String dir =  directory+"/small/";
+		String indexFile = "small_index_genes_java";
+		String heatScoreFile = "small_heatScore_java";
+		
+		selectDeltaForPrototypeByCompSize(dir, indexFile, heatScoreFile, beta, numPermutation);
+	}
+	
+	
+	/**
+	 * Selects the delta parameter for the Prototype network based on random permutation networks.
+	 * <p>
+	 * <b>Note:</b> results are saved in a textfile for processing in excel.
+	 * @param directory - Directory of Reactome FI network file and place to save files. 
+	 * @param beta - Fraction of own heat each gene retains. Should be beta=0.25 or 0.30.
+	 * @throws IOException
+	 */
+	public void selectDeltaForPrototypeByCompSize(String directory, String geneIndexFile, String heatScoreFile, double beta, int numPermutation) throws IOException{
+		FileUtils fu = new FileUtils();
+		GraphUtils gu = new GraphUtils();
+		WeakComponentClusterer<String, String> wcc = new WeakComponentClusterer<String, String>();
+		//Create set of genes in network and HashMap of gene index to allow gene names in graph instead of numbers
+		SortedSet<String> genes = fu.getAllGenesPY(directory, geneIndexFile, "\t");
+		HashMap<String, String> geneIndexMap = fu.getGeneIndexNamePY(directory, geneIndexFile, "\t");
+		//List for storing delta values for the maximum component size 10
+		List<Double> maxCompSize5 = new ArrayList<Double>();
+		List<Double> maxCompSize10 = new ArrayList<Double>();
+		List<Double> maxCompSize15 = new ArrayList<Double>();
+		List<Double> maxCompSize20 = new ArrayList<Double>();
+		//Use random permutated networks to obtain delta
+		String edgeListDirectory = directory + "/permutations/";
+		File folder = new File(edgeListDirectory);
+		File[] listOfFiles = folder.listFiles();
+		int iterations = 0;
+		int i = 0;
+		for (File file: listOfFiles){
+			long start1 = System.currentTimeMillis();
+			String edgeListFile = file.getName();
+			
+			//Create graph from file and check there is only 1 component
+			Set<String> pairs = fu.getAllInteractionPairsPY(edgeListDirectory, edgeListFile, geneIndexMap, false, "\t");
+			Graph<String, String> largestComponent = gu.createGraph(genes, pairs);
+			Set<Set<String>> components = wcc.transform(largestComponent);
+			if (components.size() != 1){
+				//throw new IllegalArgumentException("Provided permuted graph " + edgeListFile + " is not connected, it has " + components + " components.");
+				System.out.println("Provided permuted graph " + edgeListFile + " is not connected, it has " + components.size() + " components.");
+			}
+			//Store smallest delta value corresponding with maximum component sizes of 5, 10, 15, and 20
+//			HashMap<Integer, Double> compSizeToDeltaMap = getByCompSizeMap(heatScoreDirectory, heatScoreFile, beta, largestComponent);
+			HashMap<Integer, Double> compSizeToDeltaMap = getByCompSizeMap(directory, heatScoreFile, beta, largestComponent);
+			maxCompSize5.add(compSizeToDeltaMap.get(5));
+			maxCompSize10.add(compSizeToDeltaMap.get(10));
+			maxCompSize15.add(compSizeToDeltaMap.get(15));
+			maxCompSize20.add(compSizeToDeltaMap.get(20));
+			long end1 = System.currentTimeMillis();
+			System.out.println(iterations + "\t" + edgeListFile + "\t" + (end1-start1) + "\tms");
+			iterations += 1;
+			 if (++i > numPermutation)
+				 break;
+		}
+		//Save deltas for each maximum component size
+		String deltaCompDirectory = directory + "/outcome/deltaSelection/";
+		String size5File = "deltaMaxComp5.txt";
+		String size10File = "deltaMaxComp10.txt";
+		String size15File = "deltaMaxComp15.txt";
+		String size20File = "deltaMaxComp20.txt";
+		Collections.sort(maxCompSize5);
+		fu.saveListToFile(deltaCompDirectory, size5File, maxCompSize5);
+		Collections.sort(maxCompSize10);
+		fu.saveListToFile(deltaCompDirectory, size10File, maxCompSize10);
+		Collections.sort(maxCompSize15);
+		fu.saveListToFile(deltaCompDirectory, size15File, maxCompSize15);
+		Collections.sort(maxCompSize20);
+		fu.saveListToFile(deltaCompDirectory, size20File, maxCompSize20);
+		return;
 	}
 	
 	/**
@@ -58,13 +149,13 @@ public class DeltaSelection{
 	 * @throws IOException
 	 */
 	public void selectDeltaByCompSize(String directory, double beta, int numPermutation) throws IOException{
-		System.out.println("selectDelta Function");
 		FileUtils fu = new FileUtils();
 		GraphUtils gu = new GraphUtils();
+		WeakComponentClusterer<String, String> wcc = new WeakComponentClusterer<String, String>();
 		//Create set of genes in network and HashMap of gene index to allow gene names in graph instead of numbers
 		String geneIndexDirectory = directory + "/PythonPermutation/";
 		String geneIndexFile = "geneIndexReactome.txt";
-		Set<String> genes = fu.getAllGenesPY(geneIndexDirectory, geneIndexFile, "\t");
+		SortedSet<String> genes = fu.getAllGenesPY(geneIndexDirectory, geneIndexFile, "\t");
 		HashMap<String, String> geneIndexMap = fu.getGeneIndexNamePY(geneIndexDirectory, geneIndexFile, "\t");
 		//List for storing delta values for the maximum component size 10
 		List<Double> maxCompSize5 = new ArrayList<Double>();
@@ -77,16 +168,14 @@ public class DeltaSelection{
 		File[] listOfFiles = folder.listFiles();
 		int iterations = 0;
 		int i = 0;
-		System.out.println("Start reading files");
 		for (File file: listOfFiles){
 			long start1 = System.currentTimeMillis();
 			String edgeListFile = file.getName();
 			String heatScoreDirectory = directory+"";
 			String heatScoreFile = "heatScore.txt";
 			//Create graph from file and check there is only 1 component
-			Set<String> pairs = fu.getAllInteractionPairsPY(edgeListDirectory, edgeListFile, geneIndexMap, " ");
+			Set<String> pairs = fu.getAllInteractionPairsPY(edgeListDirectory, edgeListFile, geneIndexMap, false, " ");
 			Graph<String, String> largestComponent = gu.createGraph(genes, pairs);
-			WeakComponentClusterer<String, String> wcc = new WeakComponentClusterer<String, String>();		
 			Set<Set<String>> components = wcc.transform(largestComponent);
 			if (components.size() != 1){
 				//throw new IllegalArgumentException("Provided permuted graph " + edgeListFile + " is not connected, it has " + components + " components.");
@@ -126,13 +215,14 @@ public class DeltaSelection{
 	 * <p>
 	 * <b>Note:</b> to compare implementation matches HotNet2 Supplementary Figure 25 for iRefIndex network with beta=0.45 and maxCompSize L_MAX=10.
 	 * The 100 random permutations are from <a href="http://compbio-research.cs.brown.edu/software/hotnet2/permuted_networks/iref9.tar">Raphael-Group Hotnet2's GitHub</a>.
-	 * @param directory - Directory Directory of iRefIndex network file and place to save files. 
+	 * @param directory - Directory of iRefIndex network file and place to save files. 
 	 * @param beta - Fraction of own heat each gene retains. Should be beta=0.45.
 	 * @throws IOException
 	 */
 	public void selectDeltaForIrefindexByCompSize(String directory, double beta, int numPermutation) throws IOException{
 		FileUtils fu = new FileUtils();
 		GraphUtils gu = new GraphUtils(); 
+		WeakComponentClusterer<String, String> wcc = new WeakComponentClusterer<String, String>();	
 		//Create set of genes in network and HashMap of gene index to allow gene names in graph instead of numbers
 		String geneIndexDirectory = directory + "/PythonPermutation_Irefindex/";
 		String geneIndexFile = "iref_index_genes";
@@ -152,9 +242,8 @@ public class DeltaSelection{
 			String heatScoreDirectory = directory+"";
 			String heatScoreFile = "heatScore.txt";
 			//Create graph from file and check there is only 1 component
-			Set<String> pairs = fu.getAllInteractionPairsPY(edgeListDirectory, edgeListFile, geneIndexMap, " ");
-			Graph<String, String> largestComponent = gu.createGraph(genes, pairs);
-			WeakComponentClusterer<String, String> wcc = new WeakComponentClusterer<String, String>();		
+			Set<String> pairs = fu.getAllInteractionPairsPY(edgeListDirectory, edgeListFile, geneIndexMap, false, " ");
+			Graph<String, String> largestComponent = gu.createGraph(genes, pairs);	
 			Set<Set<String>> components = wcc.transform(largestComponent);
 			if (components.size() != 1){
 				//throw new IllegalArgumentException("Provided permuted graph " + edgeListFile + " is not connected, it has " + components.size() + " components.");
@@ -166,7 +255,7 @@ public class DeltaSelection{
 			long end1 = System.currentTimeMillis();
 			System.out.println(iterations + "\t" + edgeListFile + "\t" + (end1-start1) + "\tms");
 			iterations += 1;
-			 if (++i > numPermutation)
+			if (++i > numPermutation)
 				 break;
 		}
 		//Save deltas for maximum component size 10
@@ -191,14 +280,14 @@ public class DeltaSelection{
 		HotNet2Matrix hn2m = new HotNet2Matrix(); 
 		SortedSet<String> geneSet = gu.getGeneGraphSet(graph);
 		PrimitiveMatrix tempF = hn2m.createDiffusionMatrixOJA(graph, geneSet, beta);
-		RealMatrix F = hn2m.convertOJAToACM(tempF);	
+		RealMatrix F = hn2m.convertOJAToACM(tempF);
 		RealMatrix ExchangedHeatMatrix = hn2m.createExchangedHeatMatrix(heatScoreDirectory, heatScoreFile, F, geneSet);
 		List<Integer> sizes = new ArrayList<Integer>();
 		sizes.add(5);
 		sizes.add(10);
 		sizes.add(15);
 		sizes.add(20);
-		HashMap<Integer, Double> compSizeToDeltaMap = selectDeltaForDiffCompSizes(geneSet, ExchangedHeatMatrix, sizes);
+		HashMap<Integer, Double> compSizeToDeltaMap = selectDeltaForDiffCompSizes(geneSet, ExchangedHeatMatrix, sizes, 0.99);
 		return compSizeToDeltaMap;
 	}
 	
@@ -212,7 +301,6 @@ public class DeltaSelection{
 	 * @throws IOException
 	 */
 	private HashMap<Integer, Double> getByCompSizeMapIrefindex(String heatScoreDirectory, String heatScoreFile, double beta, Graph<String,String> graph) throws IOException{
-		System.out.println("Matrix Calc");
 		GraphUtils gu = new GraphUtils();
 		HotNet2Matrix hn2m = new HotNet2Matrix(); 
 		SortedSet<String> geneSet = gu.getGeneGraphSet(graph);
@@ -221,7 +309,7 @@ public class DeltaSelection{
 		RealMatrix ExchangedHeatMatrix = hn2m.createExchangedHeatMatrix(heatScoreDirectory, heatScoreFile, F, geneSet);
 		List<Integer> sizes = new ArrayList<Integer>();
 		sizes.add(10);
-		HashMap<Integer, Double> compSizeToDeltaMap = selectDeltaForDiffCompSizes(geneSet, ExchangedHeatMatrix, sizes);
+		HashMap<Integer, Double> compSizeToDeltaMap = selectDeltaForDiffCompSizes(geneSet, ExchangedHeatMatrix, sizes, 0.99);
 		return compSizeToDeltaMap;
 	}
 	
@@ -232,25 +320,30 @@ public class DeltaSelection{
 	 * @param geneSet - Set of genes used to determine matrix order. 
 	 * @param ExchangedHeatMatrix - Exchanged heat matrix.
 	 * @param sizeList - List of sizes for the largest component. 
-	 * @param directory - Directory to store file.
-	 * @return a HashMap  a HashMap with the largest component size as key and it's smallest delta as value.
+	 * @param startQuant - Percentile of edge weights used as starting delta for binary search. Default is be 0.99.
 	 * @throws IOException
 	 */
-	private HashMap<Integer, Double> selectDeltaForDiffCompSizes(Set<String> geneSet, RealMatrix ExchangedHeatMatrix, List<Integer> sizeList) throws IOException{
+	private HashMap<Integer, Double> selectDeltaForDiffCompSizes(SortedSet<String> geneSet, RealMatrix exchangedHeatMatrix, List<Integer> sizeList, double startQuant) throws IOException{
 		HotNet2Matrix hn2m = new HotNet2Matrix(); 
 		HashMap<Integer, Double> compSizeToDeltaMap = new HashMap<Integer, Double>();
 		for (Integer size: sizeList){
 			double delta = -1;
-			ArrayList<Double> sortedEdgeWeights = new ArrayList<Double>(obtainUniqueExchangedHeatMatrixValues(ExchangedHeatMatrix));
-			int index = (int) Math.ceil(sortedEdgeWeights.size()*0.99)-1;
+			Set<Double> sortedEdgeWeightSet = obtainUniqueExchangedHeatMatrixValues(exchangedHeatMatrix);
+			ArrayList<Double> sortedEdgeWeights = new ArrayList<Double>(sortedEdgeWeightSet);			
+			//int index = (int) Math.ceil(sortedEdgeWeights.size()*startQuant)-1; //must use this for small network with 5 nodes
+			int index = (int) Math.ceil(sortedEdgeWeights.size()*startQuant)-1;
 			int left = 0;
 			int right = sortedEdgeWeights.size();
 			List<Double> visitedDelta = new ArrayList<Double>();
+			
 			while(visitedDelta.size() < 100){
 				//Construct new matrix using new delta
 				delta = sortedEdgeWeights.get(index);
-				RealMatrix H = hn2m.identifyHotSubnetworks(ExchangedHeatMatrix, delta);
-				int maxSubnetworkSize = obtainLargestSubnetworkSize(H, geneSet);
+//				RealMatrix H = hn2m.identifyHotSubnetworks(exchangedHeatMatrix, delta);
+//				int maxSubnetworkSize = obtainLargestSubnetworkSize(H, geneSet);
+//				int maxSubnetworkSize = hn2m.obtainLargestSubnetworkSizeForEdgeWeight(exchangedHeatMatrix, delta);
+				int maxSubnetworkSize = hn2m.obtainMaxSubnetworkSizeForEdgeWeight(exchangedHeatMatrix, delta);
+				
 				if (visitedDelta.contains(delta)){
 					compSizeToDeltaMap.put(size, delta);
 					break;
@@ -260,10 +353,10 @@ public class DeltaSelection{
 				//Increment if delta too small or decrement if delta too big based on max component size
 				if (size > maxSubnetworkSize){
 					right = index;
-					index -= Math.ceil((index-left)/2);
+					index -= Math.ceil((index-left)/2.0);
 				} else {
 					left = index;
-					index += Math.ceil((right-index)/2); 
+					index += Math.ceil((right-index)/2.0); 
 				}
 			}
 			if (compSizeToDeltaMap.get(size) == null)
@@ -278,9 +371,10 @@ public class DeltaSelection{
 	 * @param geneSet - Set of genes used to determine matrix order. 
 	 * @return the value of the largest component size.
 	 */
-	private int obtainLargestSubnetworkSize(RealMatrix matrix, Set<String> geneSet){
+	private int obtainLargestSubnetworkSize(RealMatrix matrix, SortedSet<String> geneSet){
 		GraphUtils gu = new GraphUtils();
-		Graph<String, String> graph = gu.covertMatrixToDirectedGraph(matrix, geneSet);
+		RealMatrix tempMatrix = matrix.copy(); 
+		Graph<String, String> graph = gu.covertMatrixToDirectedGraph(tempMatrix, geneSet);
 		WeakComponentClusterer<String, String> wcc = new WeakComponentClusterer<String, String>();		
 		Set<Set<String>> components = wcc.transform(graph);
 		int largestSize = 0;
@@ -344,7 +438,7 @@ public class DeltaSelection{
 			sizes.add(15);
 			sizes.add(20);
 			//Store smallest delta value corresponding with maximum component sizes of 5, 10, 15, and 20
-			HashMap<Integer, Double> compSizeToDeltaMap = selectDeltaForDiffCompSizes(geneSet, ExchangedHeatMatrix, sizes);
+			HashMap<Integer, Double> compSizeToDeltaMap = selectDeltaForDiffCompSizes(geneSet, ExchangedHeatMatrix, sizes, 0.99);
 			maxCompSize5.add(compSizeToDeltaMap.get(5));
 			maxCompSize10.add(compSizeToDeltaMap.get(10));
 			maxCompSize15.add(compSizeToDeltaMap.get(15));
@@ -373,7 +467,7 @@ public class DeltaSelection{
 	 * @param scoreList - List of heat scores for randomly assigned to genes.
 	 * @return a HashMap with gene as key and random heat score as value.
 	 */
-	private HashMap<String, Double> createRandomHeatScoreMap(Set<String> geneSet, List<Double> scoreList){
+	private HashMap<String, Double> createRandomHeatScoreMap(SortedSet<String> geneSet, List<Double> scoreList){
 		HashMap<String, Double> randomHeatScoreMap = new HashMap<String, Double>();
 		Random randomGen = new Random();
 		for (String g: geneSet){
