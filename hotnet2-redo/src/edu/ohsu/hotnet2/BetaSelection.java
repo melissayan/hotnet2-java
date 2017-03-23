@@ -59,12 +59,9 @@ public class BetaSelection{
 	 */
 	public void selectBeta(String directory, String fiFile, String betweennessScoreFile, String influenceFile, boolean onlyTP53) throws IOException{
 		GraphUtils gu = new GraphUtils();
-		 
 		//Create the largest component using the whole ReactomeFI network graph
 		Graph<String, String> allGenesGraph = gu.createReactomeFIGraph(directory, fiFile);
 		Graph<String, String> largestComponent = gu.createLargestComponentGraph(allGenesGraph);
-
-		
 		if (onlyTP53 == true){
 			//Get TP53 as a source protein
 			List<String> sourceProteins =  new ArrayList<String>();

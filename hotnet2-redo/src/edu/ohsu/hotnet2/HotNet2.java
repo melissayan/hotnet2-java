@@ -97,7 +97,6 @@ public class HotNet2 {
 //	          String fiFile = "iref_edge_list_temp";
         fiFile = fu.modifyEdgeFileToTabDelimited(directory, fiFile, false, " ");
         System.out.println(fiFile);
-        Path fiFilePath = Paths.get(directory, fiFile);
         bs.selectBetaForIrefindex(directory, fiFile, betweennessScoreFile, influenceFile);
     }
 
@@ -106,8 +105,7 @@ public class HotNet2 {
             throws IOException {
         System.out.println("Beta Selection using Reactome FI network");
         String fiFile = "FIsInGene_031516_with_annotations.txt";
-        Path fiFilePath = Paths.get(directory, fiFile);
-        if (args[1] == "onlyTP53"){
+        if (args[1].equals("onlyTP53")){
             Boolean onlyTP53 = true;
             bs.selectBeta(directory, fiFile, betweennessScoreFile, influenceFile, onlyTP53);
         }
@@ -121,7 +119,6 @@ public class HotNet2 {
                                       BetaSelection bs)
             throws IOException {
         String fiFile = "FIsInGene_temp.txt";
-        Path fiFilePath = Paths.get(directory, fiFile);
         Boolean onlyTP53 = false; 
         bs.selectBeta(directory, fiFile, betweennessScoreFile, influenceFile, onlyTP53);
     }
