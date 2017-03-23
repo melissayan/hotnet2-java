@@ -99,7 +99,7 @@ public class GraphUtils{
 	 * @throws IOException
 	 */
 	public Graph<String, String> createReactomeFIGraph(String directory, String fiFile) throws IOException{
-		FileUtils fu = new FileUtils();
+//		FileUtils fu = new FileUtils();
 		Path fiFilePath = Paths.get(directory, fiFile);
 		Set<String> allGenes = fu.getAllGenesReactome(fiFilePath);
 		Set<String> allPairs = fu.getAllInteractionPairsReactome(fiFilePath);
