@@ -133,7 +133,7 @@ public class BetaSelection{
 		List<String> sourceProteins =  new ArrayList<String>();
 		sourceProteins.add("10922");
 //		sourceProteins.add("6911"); //source protein for iref_edge_list_temp
-
+  
 		//Generate diffusion matrix with beta: 0.45
 		SortedSet<String> geneSet = gu.getGeneGraphSet(largestComponent);
 		for(int i=1; i<2; i++){
